@@ -1,0 +1,16 @@
+export { db } from './db/index.js'
+export { auth } from './auth/index.js'
+export { storage } from './storage/index.js'
+export { email } from './email/index.js'
+export { realtime } from './realtime/index.js'
+export { getConfig, setConfig, isLocal, isProduction } from './config/index.js'
+export { VibeKitError, AuthError, DbError, StorageError, ErrorCodes } from './utils/errors.js'
+export { createLogger } from './utils/logger.js'
+
+// Re-export types
+export type { User, Session, AuthResult, SendCodeResult } from './auth/types.js'
+export type { QueryResult, ExecuteResult, ColumnDefinition, ColumnType, TableDefinition } from './db/types.js'
+export type { FileInfo, UploadOptions, ListFilesResult } from './storage/types.js'
+export type { SendEmailOptions, EmailTemplate } from './email/types.js'
+export type { RealtimeMessage, PresenceState } from './realtime/types.js'
+export type { VibeKitConfig, ResolvedConfig, VibeKitEnv } from './config/types.js'

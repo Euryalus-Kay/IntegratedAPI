@@ -1,0 +1,5 @@
+export { db } from './client.js'
+export { defineTable, getTableDefinitions, getTableDefinition, clearTableDefinitions } from './schema.js'
+export { Migrator } from './migrator.js'
+export { QueryBuilder } from './query-builder.js'
+export * from './types.js'
