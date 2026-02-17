@@ -1,0 +1,3490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VibeKit - The Complete Backend for AI-Coded Apps</title>
+  <meta name="description" content="Database, auth, storage, email, realtime, and deployment in one package. Zero configuration. One import replaces Supabase + Vercel + Railway.">
+  <meta name="theme-color" content="#000000">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ========================================
+       RESET & BASE
+       ======================================== */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    body {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #000000;
+      color: #EDEDED;
+      font-size: 16px;
+      line-height: 1.7;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* ========================================
+       NOISE TEXTURE OVERLAY
+       ======================================== */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10000;
+      opacity: 0.02;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 256px 256px;
+    }
+
+    /* ========================================
+       UTILITY & LAYOUT
+       ======================================== */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .container-wide {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    /* ========================================
+       SCROLLBAR
+       ======================================== */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #000;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #222;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #333;
+    }
+
+    /* ========================================
+       SECTION DIVIDERS
+       ======================================== */
+    .section-divider {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #222222 20%, #333333 50%, #222222 80%, transparent);
+      margin: 0;
+    }
+
+    /* ========================================
+       ANIMATION BASE CLASSES
+       ======================================== */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      filter: blur(4px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                  filter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+    .reveal-delay-5 { transition-delay: 0.5s; }
+    .reveal-delay-6 { transition-delay: 0.6s; }
+
+    /* ========================================
+       NAVIGATION
+       ======================================== */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid #1A1A1A;
+      height: 64px;
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+      color: #EDEDED;
+      flex-shrink: 0;
+    }
+
+    .nav-logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #00A3FF, #0070CC);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .nav-logo-icon::after {
+      content: '';
+      width: 10px;
+      height: 10px;
+      border: 2px solid #fff;
+      border-radius: 2px;
+      transform: rotate(45deg);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .nav-links a {
+      font-size: 14px;
+      font-weight: 400;
+      color: #888888;
+      transition: color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      white-space: nowrap;
+    }
+
+    .nav-links a:hover {
+      color: #EDEDED;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .nav-cta {
+      padding: 8px 20px;
+      background: #00A3FF;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      white-space: nowrap;
+    }
+
+    .nav-cta:hover {
+      background: #0090E0;
+      box-shadow: 0 0 20px rgba(0, 163, 255, 0.3);
+    }
+
+    /* Hamburger */
+    .nav-hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      padding: 8px;
+      cursor: pointer;
+      z-index: 10001;
+    }
+
+    .nav-hamburger span {
+      width: 20px;
+      height: 1.5px;
+      background: #EDEDED;
+      border-radius: 2px;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .nav-hamburger.active span:nth-child(1) {
+      transform: rotate(45deg) translate(4px, 5px);
+    }
+
+    .nav-hamburger.active span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .nav-hamburger.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(4px, -5px);
+    }
+
+    /* Mobile drawer */
+    .nav-mobile {
+      display: none;
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 300px;
+      height: 100vh;
+      background: rgba(10, 10, 10, 0.98);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-left: 1px solid #1A1A1A;
+      padding: 80px 32px 32px;
+      transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 10000;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-mobile.open {
+      right: 0;
+    }
+
+    .nav-mobile a {
+      display: block;
+      padding: 14px 0;
+      font-size: 16px;
+      color: #888888;
+      border-bottom: 1px solid #1A1A1A;
+      transition: color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .nav-mobile a:hover {
+      color: #EDEDED;
+    }
+
+    .nav-mobile-cta {
+      margin-top: 24px;
+      padding: 14px 24px;
+      background: #00A3FF;
+      color: #fff !important;
+      font-weight: 600;
+      border-radius: 8px;
+      text-align: center;
+      border: none !important;
+    }
+
+    .nav-mobile-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 9998;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .nav-mobile-overlay.active {
+      opacity: 1;
+    }
+
+    /* ========================================
+       HERO SECTION
+       ======================================== */
+    .hero {
+      position: relative;
+      padding: 160px 0 80px;
+      text-align: center;
+      overflow: hidden;
+      background: #000000;
+    }
+
+    /* Hero radial glow */
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 600px;
+      background: radial-gradient(ellipse at center, rgba(0, 163, 255, 0.08) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 500px;
+      height: 400px;
+      background: radial-gradient(ellipse at center, rgba(100, 60, 255, 0.05) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: rgba(0, 163, 255, 0.08);
+      border: 1px solid rgba(0, 163, 255, 0.15);
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #00A3FF;
+      margin-bottom: 32px;
+    }
+
+    .hero-badge-dot {
+      width: 6px;
+      height: 6px;
+      background: #00A3FF;
+      border-radius: 50%;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .hero h1 {
+      font-size: 72px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      max-width: 900px;
+      margin: 0 auto 28px;
+      background: linear-gradient(to bottom, #FFFFFF, #888888);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subtitle {
+      font-size: 18px;
+      font-weight: 400;
+      color: #888888;
+      max-width: 640px;
+      margin: 0 auto 48px;
+      line-height: 1.7;
+    }
+
+    .hero-ctas {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 80px;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 32px;
+      background: #00A3FF;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 10px;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 0 20px rgba(0, 163, 255, 0.2),
+                  0 0 60px rgba(0, 163, 255, 0.1);
+    }
+
+    .btn-primary:hover {
+      background: #0090E0;
+      box-shadow: 0 0 30px rgba(0, 163, 255, 0.35),
+                  0 0 80px rgba(0, 163, 255, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 32px;
+      background: transparent;
+      color: #EDEDED;
+      font-size: 16px;
+      font-weight: 500;
+      border-radius: 10px;
+      border: 1px solid #333333;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-ghost:hover {
+      border-color: #555555;
+      background: rgba(255, 255, 255, 0.03);
+      transform: translateY(-1px);
+    }
+
+    /* ========================================
+       PRODUCT DEMO MOCKUP
+       ======================================== */
+    .demo-wrapper {
+      position: relative;
+      max-width: 900px;
+      margin: 0 auto;
+      z-index: 1;
+    }
+
+    /* Background glows behind demo */
+    .demo-wrapper::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 120%;
+      height: 120%;
+      background: radial-gradient(ellipse at 30% 50%, rgba(0, 163, 255, 0.06) 0%, transparent 60%),
+                  radial-gradient(ellipse at 70% 50%, rgba(100, 60, 255, 0.04) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .demo-container {
+      background: #0D0D0D;
+      border: 1px solid #1A1A1A;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(0, 163, 255, 0.05),
+                  0 20px 60px rgba(0, 0, 0, 0.5),
+                  0 0 1px rgba(255, 255, 255, 0.05);
+    }
+
+    /* Window chrome / title bar */
+    .demo-titlebar {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      background: #111111;
+      border-bottom: 1px solid #1A1A1A;
+      gap: 8px;
+    }
+
+    .demo-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .demo-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #333333;
+    }
+
+    .demo-dot:nth-child(1) { background: #FF5F57; }
+    .demo-dot:nth-child(2) { background: #FEBC2E; }
+    .demo-dot:nth-child(3) { background: #28C840; }
+
+    .demo-titlebar-tabs {
+      display: flex;
+      margin-left: 16px;
+      gap: 0;
+    }
+
+    .demo-tab {
+      padding: 4px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #555555;
+      border-radius: 6px;
+      transition: all 0.3s;
+    }
+
+    .demo-tab.active {
+      color: #EDEDED;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Demo content area */
+    .demo-body {
+      position: relative;
+      min-height: 380px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .demo-editor {
+      display: none;
+      padding: 20px 24px;
+    }
+
+    .demo-editor.active {
+      display: block;
+    }
+
+    .demo-terminal {
+      border-top: 1px solid #1A1A1A;
+      background: #080808;
+      padding: 16px 24px;
+      min-height: 140px;
+    }
+
+    .demo-terminal-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      font-size: 11px;
+      color: #555555;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .demo-terminal-header-icon {
+      width: 14px;
+      height: 14px;
+      border: 1px solid #333;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      color: #555;
+    }
+
+    /* Line numbers */
+    .demo-line {
+      display: flex;
+      width: 100%;
+    }
+
+    .demo-line-num {
+      width: 40px;
+      text-align: right;
+      padding-right: 16px;
+      color: #333333;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .demo-line-content {
+      flex: 1;
+      white-space: pre;
+      min-height: 1.7em;
+    }
+
+    /* Terminal line */
+    .term-line {
+      display: flex;
+      align-items: flex-start;
+      min-height: 1.7em;
+    }
+
+    .term-prompt {
+      color: #00A3FF;
+      margin-right: 8px;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .term-text {
+      color: #EDEDED;
+    }
+
+    .term-output {
+      color: #555555;
+    }
+
+    .term-success {
+      color: #28C840;
+    }
+
+    /* Typing cursor */
+    .typing-cursor {
+      display: inline-block;
+      width: 8px;
+      height: 17px;
+      background: #00A3FF;
+      margin-left: 1px;
+      vertical-align: text-bottom;
+      animation: blink-cursor 1s step-end infinite;
+    }
+
+    @keyframes blink-cursor {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* Syntax highlighting colors */
+    .syn-keyword { color: #C678DD; }
+    .syn-string { color: #98C379; }
+    .syn-function { color: #61AFEF; }
+    .syn-variable { color: #E06C75; }
+    .syn-comment { color: #5C6370; font-style: italic; }
+    .syn-bracket { color: #ABB2BF; }
+    .syn-operator { color: #56B6C2; }
+    .syn-property { color: #E5C07B; }
+    .syn-method { color: #61AFEF; }
+    .syn-number { color: #D19A66; }
+    .syn-const { color: #E5C07B; }
+    .syn-import { color: #C678DD; }
+    .syn-from { color: #C678DD; }
+    .syn-await { color: #C678DD; }
+    .syn-plain { color: #ABB2BF; }
+
+    /* ========================================
+       TRUST BAR
+       ======================================== */
+    .trust-bar {
+      padding: 80px 0;
+      text-align: center;
+      background: #000;
+    }
+
+    .trust-label {
+      font-size: 14px;
+      color: #555555;
+      margin-bottom: 40px;
+      letter-spacing: 0.02em;
+    }
+
+    .trust-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 32px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .trust-metric {
+      text-align: center;
+    }
+
+    .trust-metric-value {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #EDEDED;
+      margin-bottom: 4px;
+    }
+
+    .trust-metric-label {
+      font-size: 14px;
+      color: #555555;
+    }
+
+    /* ========================================
+       FEATURE SECTIONS
+       ======================================== */
+    .feature-section {
+      padding: 120px 0;
+      position: relative;
+    }
+
+    .feature-section:nth-child(even) {
+      background: #0A0A0A;
+    }
+
+    .feature-section:nth-child(odd) {
+      background: #000000;
+    }
+
+    .feature-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+
+    .feature-layout.reverse {
+      direction: rtl;
+    }
+
+    .feature-layout.reverse > * {
+      direction: ltr;
+    }
+
+    .feature-layout.centered {
+      grid-template-columns: 1fr;
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .feature-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #00A3FF;
+      margin-bottom: 16px;
+    }
+
+    .feature-heading {
+      font-size: 42px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: #EDEDED;
+      margin-bottom: 20px;
+    }
+
+    .feature-description {
+      font-size: 16px;
+      color: #888888;
+      line-height: 1.7;
+      max-width: 480px;
+      margin-bottom: 24px;
+    }
+
+    .feature-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 15px;
+      font-weight: 500;
+      color: #00A3FF;
+      transition: gap 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .feature-link:hover {
+      gap: 10px;
+    }
+
+    .feature-link-arrow {
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .feature-link:hover .feature-link-arrow {
+      transform: translateX(2px);
+    }
+
+    /* Feature mini demos */
+    .feature-demo {
+      background: #0D0D0D;
+      border: 1px solid #1A1A1A;
+      border-radius: 12px;
+      overflow: hidden;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .feature-demo-bar {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      background: #111111;
+      border-bottom: 1px solid #1A1A1A;
+      gap: 6px;
+    }
+
+    .feature-demo-bar-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .feature-demo-bar-dot:nth-child(1) { background: #FF5F57; }
+    .feature-demo-bar-dot:nth-child(2) { background: #FEBC2E; }
+    .feature-demo-bar-dot:nth-child(3) { background: #28C840; }
+
+    .feature-demo-bar-title {
+      margin-left: 12px;
+      font-size: 11px;
+      color: #555555;
+    }
+
+    .feature-demo-content {
+      padding: 20px 24px;
+      min-height: 200px;
+      position: relative;
+    }
+
+    .feature-code-line {
+      display: flex;
+      width: 100%;
+      min-height: 1.7em;
+    }
+
+    .feature-code-num {
+      width: 32px;
+      text-align: right;
+      padding-right: 16px;
+      color: #333333;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .feature-code-text {
+      flex: 1;
+      white-space: pre;
+    }
+
+    /* Feature demo result panel */
+    .feature-demo-result {
+      border-top: 1px solid #1A1A1A;
+      padding: 16px 24px;
+      background: #080808;
+    }
+
+    .feature-demo-result-header {
+      font-size: 10px;
+      color: #555555;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+
+    .result-row {
+      display: flex;
+      gap: 16px;
+      padding: 6px 0;
+      border-bottom: 1px solid #111111;
+      font-size: 12px;
+    }
+
+    .result-row:last-child {
+      border-bottom: none;
+    }
+
+    .result-key {
+      color: #555555;
+      min-width: 60px;
+    }
+
+    .result-val {
+      color: #888888;
+    }
+
+    /* ========================================
+       HOW IT WORKS SECTION
+       ======================================== */
+    .how-it-works {
+      padding: 120px 0;
+      background: #0A0A0A;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .how-it-works::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 800px;
+      height: 600px;
+      background: radial-gradient(ellipse at center, rgba(0, 163, 255, 0.03) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .how-header {
+      text-align: center;
+      margin-bottom: 80px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .how-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #00A3FF;
+      margin-bottom: 16px;
+    }
+
+    .how-heading {
+      font-size: 42px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: #EDEDED;
+      margin-bottom: 16px;
+    }
+
+    .how-subtext {
+      font-size: 16px;
+      color: #888888;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .how-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      max-width: 1000px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .how-step {
+      position: relative;
+      padding: 40px 32px;
+      background: #0D0D0D;
+      border: 1px solid #1A1A1A;
+      border-radius: 16px;
+      transition: border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                  box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .how-step:hover {
+      border-color: #222222;
+      box-shadow: 0 0 30px rgba(0, 163, 255, 0.03);
+    }
+
+    .how-step-number {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(0, 163, 255, 0.08);
+      border: 1px solid rgba(0, 163, 255, 0.15);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      color: #00A3FF;
+      margin-bottom: 24px;
+    }
+
+    .how-step-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #EDEDED;
+      margin-bottom: 12px;
+      letter-spacing: -0.01em;
+    }
+
+    .how-step-desc {
+      font-size: 14px;
+      color: #888888;
+      line-height: 1.7;
+    }
+
+    .how-step-code {
+      margin-top: 20px;
+      padding: 14px 18px;
+      background: #080808;
+      border: 1px solid #1A1A1A;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: #888888;
+      overflow-x: auto;
+    }
+
+    .how-step-code .cmd {
+      color: #00A3FF;
+    }
+
+    .how-step-code .arg {
+      color: #EDEDED;
+    }
+
+    /* Connector lines between steps */
+    .how-connector {
+      display: none;
+    }
+
+    @media (min-width: 769px) {
+      .how-connector {
+        display: block;
+        position: absolute;
+        top: 60px;
+        right: -17px;
+        width: 34px;
+        height: 1px;
+        background: linear-gradient(90deg, #1A1A1A, #333333, #1A1A1A);
+        z-index: 2;
+      }
+
+      .how-connector::after {
+        content: '';
+        position: absolute;
+        right: -2px;
+        top: -3px;
+        width: 7px;
+        height: 7px;
+        border-right: 1px solid #333333;
+        border-top: 1px solid #333333;
+        transform: rotate(45deg);
+      }
+    }
+
+    /* ========================================
+       CODE COMPARISON SECTION
+       ======================================== */
+    .comparison-section {
+      padding: 120px 0;
+      background: #000000;
+      position: relative;
+    }
+
+    .comparison-header {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+
+    .comparison-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #00A3FF;
+      margin-bottom: 16px;
+    }
+
+    .comparison-heading {
+      font-size: 42px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: #EDEDED;
+      margin-bottom: 16px;
+    }
+
+    .comparison-subtext {
+      font-size: 16px;
+      color: #888888;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 60px 1fr;
+      gap: 0;
+      max-width: 1000px;
+      margin: 0 auto;
+      align-items: stretch;
+    }
+
+    .comparison-panel {
+      background: #0D0D0D;
+      border: 1px solid #1A1A1A;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .comparison-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: #111111;
+      border-bottom: 1px solid #1A1A1A;
+    }
+
+    .comparison-panel-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #888888;
+    }
+
+    .comparison-panel-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      padding: 3px 10px;
+      border-radius: 100px;
+      letter-spacing: 0.05em;
+    }
+
+    .comparison-panel-badge.old {
+      background: rgba(224, 108, 117, 0.1);
+      color: #E06C75;
+      border: 1px solid rgba(224, 108, 117, 0.15);
+    }
+
+    .comparison-panel-badge.new {
+      background: rgba(40, 200, 64, 0.1);
+      color: #28C840;
+      border: 1px solid rgba(40, 200, 64, 0.15);
+    }
+
+    .comparison-panel-body {
+      padding: 20px 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.8;
+      min-height: 300px;
+    }
+
+    .comparison-vs {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .comparison-vs-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #111111;
+      border: 1px solid #222222;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #555555;
+      letter-spacing: 0.05em;
+    }
+
+    .comp-line {
+      display: flex;
+      width: 100%;
+      min-height: 1.8em;
+    }
+
+    .comp-num {
+      width: 28px;
+      text-align: right;
+      padding-right: 14px;
+      color: #333333;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .comp-code {
+      flex: 1;
+      white-space: pre;
+      color: #ABB2BF;
+    }
+
+    .comp-code .kw { color: #C678DD; }
+    .comp-code .str { color: #98C379; }
+    .comp-code .fn { color: #61AFEF; }
+    .comp-code .var { color: #E06C75; }
+    .comp-code .cm { color: #5C6370; font-style: italic; }
+    .comp-code .op { color: #56B6C2; }
+    .comp-code .prop { color: #E5C07B; }
+    .comp-code .num { color: #D19A66; }
+    .comp-code .br { color: #ABB2BF; }
+
+    .comparison-file-count {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 13px;
+      color: #555555;
+    }
+
+    .comparison-file-count span {
+      color: #888888;
+      font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+      .how-steps {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+
+      .how-heading {
+        font-size: 32px;
+      }
+
+      .comparison-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+
+      .comparison-vs {
+        display: none;
+      }
+
+      .comparison-heading {
+        font-size: 32px;
+      }
+
+      .comparison-panel-body {
+        font-size: 11px;
+        min-height: auto;
+        padding: 16px;
+      }
+    }
+
+    /* ========================================
+       PRICING SECTION
+       ======================================== */
+    .pricing-section {
+      padding: 120px 0;
+      background: #0A0A0A;
+    }
+
+    .pricing-header {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+
+    .pricing-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #00A3FF;
+      margin-bottom: 16px;
+    }
+
+    .pricing-heading {
+      font-size: 42px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: #EDEDED;
+      margin-bottom: 16px;
+    }
+
+    .pricing-subtext {
+      font-size: 16px;
+      color: #888888;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .pricing-card {
+      background: #0D0D0D;
+      border: 1px solid #1A1A1A;
+      border-radius: 16px;
+      padding: 40px 32px;
+      position: relative;
+      transition: border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                  box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .pricing-card:hover {
+      border-color: #333333;
+      box-shadow: 0 0 40px rgba(0, 163, 255, 0.03);
+    }
+
+    .pricing-card.featured {
+      border-color: rgba(0, 163, 255, 0.3);
+      box-shadow: 0 0 40px rgba(0, 163, 255, 0.05);
+    }
+
+    .pricing-card.featured:hover {
+      border-color: rgba(0, 163, 255, 0.5);
+      box-shadow: 0 0 60px rgba(0, 163, 255, 0.08);
+    }
+
+    .pricing-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 4px 16px;
+      background: #00A3FF;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      border-radius: 100px;
+      white-space: nowrap;
+    }
+
+    .pricing-tier {
+      font-size: 16px;
+      font-weight: 600;
+      color: #EDEDED;
+      margin-bottom: 8px;
+    }
+
+    .pricing-price {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .pricing-amount {
+      font-size: 48px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #EDEDED;
+    }
+
+    .pricing-period {
+      font-size: 16px;
+      color: #555555;
+    }
+
+    .pricing-desc {
+      font-size: 14px;
+      color: #555555;
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+
+    .pricing-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .pricing-features li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: #888888;
+    }
+
+    .pricing-check {
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .pricing-check svg {
+      width: 14px;
+      height: 14px;
+      color: #28C840;
+    }
+
+    .pricing-cta {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      text-align: center;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .pricing-cta-primary {
+      background: #00A3FF;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(0, 163, 255, 0.15);
+    }
+
+    .pricing-cta-primary:hover {
+      background: #0090E0;
+      box-shadow: 0 0 30px rgba(0, 163, 255, 0.3);
+    }
+
+    .pricing-cta-secondary {
+      background: transparent;
+      color: #EDEDED;
+      border: 1px solid #333333;
+    }
+
+    .pricing-cta-secondary:hover {
+      border-color: #555555;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    /* ========================================
+       BOTTOM CTA
+       ======================================== */
+    .bottom-cta {
+      padding: 200px 0;
+      text-align: center;
+      position: relative;
+      background: #000000;
+      overflow: hidden;
+    }
+
+    .bottom-cta::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 400px;
+      background: radial-gradient(ellipse at center, rgba(0, 163, 255, 0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .bottom-cta-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .bottom-cta h2 {
+      font-size: 48px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: #EDEDED;
+      margin-bottom: 16px;
+    }
+
+    .bottom-cta-sub {
+      font-size: 18px;
+      color: #555555;
+      margin-bottom: 48px;
+    }
+
+    /* ========================================
+       FOOTER
+       ======================================== */
+    .footer {
+      padding: 80px 0 48px;
+      background: #000000;
+      border-top: 1px solid #1A1A1A;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.5fr repeat(4, 1fr);
+      gap: 48px;
+      margin-bottom: 64px;
+    }
+
+    .footer-brand {
+      max-width: 260px;
+    }
+
+    .footer-brand-name {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 18px;
+      color: #EDEDED;
+      margin-bottom: 16px;
+    }
+
+    .footer-brand-icon {
+      width: 24px;
+      height: 24px;
+      background: linear-gradient(135deg, #00A3FF, #0070CC);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .footer-brand-icon::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border: 1.5px solid #fff;
+      border-radius: 2px;
+      transform: rotate(45deg);
+    }
+
+    .footer-brand-desc {
+      font-size: 14px;
+      color: #555555;
+      line-height: 1.6;
+    }
+
+    .footer-col-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #888888;
+      margin-bottom: 20px;
+      letter-spacing: 0.02em;
+    }
+
+    .footer-col-links {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .footer-col-links a {
+      font-size: 14px;
+      color: #555555;
+      transition: color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .footer-col-links a:hover {
+      color: #888888;
+    }
+
+    .footer-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 32px;
+      border-top: 1px solid #1A1A1A;
+    }
+
+    .footer-copyright {
+      font-size: 13px;
+      color: #333333;
+    }
+
+    .footer-bottom-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .footer-bottom-links a {
+      font-size: 13px;
+      color: #333333;
+      transition: color 0.3s;
+    }
+
+    .footer-bottom-links a:hover {
+      color: #555555;
+    }
+
+    /* ========================================
+       FEATURE DEMO ANIMATIONS
+       ======================================== */
+    @keyframes fadeInLine {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-line {
+      animation: fadeInLine 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+    }
+
+    /* Auth flow animation */
+    .auth-flow-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border: 1px solid #1A1A1A;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      background: #111111;
+      opacity: 0;
+      transform: translateX(-10px);
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .auth-flow-step.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .auth-flow-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .auth-flow-icon.email { background: rgba(0, 163, 255, 0.1); color: #00A3FF; }
+    .auth-flow-icon.code { background: rgba(225, 183, 60, 0.1); color: #E5C07B; }
+    .auth-flow-icon.success { background: rgba(40, 200, 64, 0.1); color: #28C840; }
+
+    .auth-flow-text {
+      font-size: 12px;
+      color: #888888;
+    }
+
+    .auth-flow-text span {
+      color: #EDEDED;
+    }
+
+    /* Upload animation */
+    .upload-zone {
+      border: 1px dashed #333333;
+      border-radius: 8px;
+      padding: 32px;
+      text-align: center;
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      margin-bottom: 16px;
+    }
+
+    .upload-zone.active {
+      border-color: #00A3FF;
+      background: rgba(0, 163, 255, 0.03);
+    }
+
+    .upload-zone-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+      color: #555555;
+    }
+
+    .upload-zone-text {
+      font-size: 12px;
+      color: #555555;
+    }
+
+    .upload-file {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: #111111;
+      border: 1px solid #1A1A1A;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .upload-file.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .upload-file-icon {
+      font-size: 14px;
+    }
+
+    .upload-file-name {
+      font-size: 12px;
+      color: #EDEDED;
+      flex: 1;
+    }
+
+    .upload-file-size {
+      font-size: 11px;
+      color: #555555;
+    }
+
+    .upload-file-status {
+      font-size: 11px;
+      color: #28C840;
+    }
+
+    /* Deploy animation */
+    .deploy-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #111111;
+      font-size: 12px;
+    }
+
+    .deploy-step:last-child {
+      border-bottom: none;
+    }
+
+    .deploy-step-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+      transition: all 0.3s;
+    }
+
+    .deploy-step-icon.pending {
+      border: 1px solid #333333;
+      color: #333333;
+    }
+
+    .deploy-step-icon.running {
+      border: 1px solid #00A3FF;
+      color: #00A3FF;
+      animation: spin-icon 1s linear infinite;
+    }
+
+    @keyframes spin-icon {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .deploy-step-icon.done {
+      background: rgba(40, 200, 64, 0.1);
+      color: #28C840;
+      border: none;
+    }
+
+    .deploy-step-text {
+      color: #888888;
+      flex: 1;
+    }
+
+    .deploy-step-text.active {
+      color: #EDEDED;
+    }
+
+    .deploy-step-time {
+      color: #555555;
+      font-size: 11px;
+    }
+
+    .deploy-url {
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: rgba(40, 200, 64, 0.05);
+      border: 1px solid rgba(40, 200, 64, 0.15);
+      border-radius: 8px;
+      font-size: 12px;
+      color: #28C840;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+
+    .deploy-url.visible {
+      opacity: 1;
+    }
+
+    /* ========================================
+       RESPONSIVE
+       ======================================== */
+    @media (max-width: 1024px) {
+      .feature-layout {
+        grid-template-columns: 1fr;
+        gap: 48px;
+      }
+
+      .feature-layout.reverse {
+        direction: ltr;
+      }
+
+      .pricing-grid {
+        grid-template-columns: 1fr;
+        max-width: 400px;
+      }
+
+      .footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 40px;
+      }
+
+      .hero-subtitle {
+        font-size: 16px;
+      }
+
+      .hero {
+        padding: 120px 0 60px;
+      }
+
+      .hero-ctas {
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 60px;
+      }
+
+      .hero-ctas .btn-primary,
+      .hero-ctas .btn-ghost {
+        width: 100%;
+        justify-content: center;
+        min-height: 44px;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .nav-hamburger {
+        display: flex;
+      }
+
+      .nav-mobile {
+        display: flex;
+      }
+
+      .nav-actions {
+        display: none;
+      }
+
+      .feature-heading {
+        font-size: 32px;
+      }
+
+      .feature-section {
+        padding: 80px 0;
+      }
+
+      .trust-metrics {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+      }
+
+      .trust-metric-value {
+        font-size: 28px;
+      }
+
+      .demo-body {
+        min-height: 300px;
+        font-size: 12px;
+      }
+
+      .bottom-cta {
+        padding: 120px 0;
+      }
+
+      .bottom-cta h2 {
+        font-size: 32px;
+      }
+
+      .footer-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+      }
+
+      .footer-brand {
+        grid-column: 1 / -1;
+      }
+
+      .footer-bottom {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+      }
+
+      .pricing-heading {
+        font-size: 32px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero h1 {
+        font-size: 36px;
+      }
+
+      .container {
+        padding: 0 16px;
+      }
+
+      .demo-body {
+        font-size: 11px;
+        min-height: 260px;
+      }
+
+      .demo-container {
+        border-radius: 8px;
+      }
+
+      .feature-demo-content {
+        padding: 16px;
+        font-size: 11px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================
+       NAVIGATION
+       ======================================== -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <div class="nav-logo-icon"></div>
+        VibeKit
+      </a>
+
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#">Docs</a>
+        <a href="#">Dashboard</a>
+      </div>
+
+      <div class="nav-actions">
+        <a href="#" class="nav-cta">Get Started</a>
+      </div>
+
+      <div class="nav-hamburger" id="navHamburger" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Mobile drawer -->
+  <div class="nav-mobile-overlay" id="navOverlay"></div>
+  <div class="nav-mobile" id="navMobile">
+    <a href="#features" class="nav-mobile-link">Features</a>
+    <a href="#pricing" class="nav-mobile-link">Pricing</a>
+    <a href="#" class="nav-mobile-link">Docs</a>
+    <a href="#" class="nav-mobile-link">Dashboard</a>
+    <a href="#" class="nav-mobile-cta">Get Started</a>
+  </div>
+
+  <!-- ========================================
+       HERO SECTION
+       ======================================== -->
+  <section class="hero">
+    <div class="container hero-content">
+      <div class="hero-badge reveal">
+        <span class="hero-badge-dot"></span>
+        Now in Public Beta
+      </div>
+
+      <h1 class="reveal reveal-delay-1">The complete backend<br>for AI-coded apps</h1>
+
+      <p class="hero-subtitle reveal reveal-delay-2">
+        Database, auth, storage, email, and deployment in one package.
+        Zero config. One import replaces Supabase + Vercel + Railway.
+      </p>
+
+      <div class="hero-ctas reveal reveal-delay-3">
+        <a href="#" class="btn-primary">
+          Get Started
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <a href="#" class="btn-ghost">
+          View Documentation
+        </a>
+      </div>
+
+      <!-- Product Demo -->
+      <div class="demo-wrapper reveal reveal-delay-4">
+        <div class="demo-container" id="productDemo">
+          <div class="demo-titlebar">
+            <div class="demo-dots">
+              <span class="demo-dot"></span>
+              <span class="demo-dot"></span>
+              <span class="demo-dot"></span>
+            </div>
+            <div class="demo-titlebar-tabs">
+              <span class="demo-tab active" id="demoTabTerminal">Terminal</span>
+              <span class="demo-tab" id="demoTabEditor">app.ts</span>
+            </div>
+          </div>
+
+          <div class="demo-body">
+            <!-- Editor panel -->
+            <div class="demo-editor" id="demoEditor">
+              <div id="editorLines"></div>
+            </div>
+
+            <!-- Terminal panel -->
+            <div class="demo-terminal" id="demoTerminal">
+              <div class="demo-terminal-header">
+                <span class="demo-terminal-header-icon">&#9654;</span>
+                Terminal
+              </div>
+              <div id="terminalContent"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================
+       TRUST BAR
+       ======================================== -->
+  <div class="section-divider"></div>
+  <section class="trust-bar">
+    <div class="container">
+      <p class="trust-label reveal">Trusted by developers building with AI</p>
+      <div class="trust-metrics">
+        <div class="trust-metric reveal reveal-delay-1">
+          <div class="trust-metric-value">10,000+</div>
+          <div class="trust-metric-label">Projects</div>
+        </div>
+        <div class="trust-metric reveal reveal-delay-2">
+          <div class="trust-metric-value">50,000+</div>
+          <div class="trust-metric-label">Deployments</div>
+        </div>
+        <div class="trust-metric reveal reveal-delay-3">
+          <div class="trust-metric-value">99.9%</div>
+          <div class="trust-metric-label">Uptime</div>
+        </div>
+        <div class="trust-metric reveal reveal-delay-4">
+          <div class="trust-metric-value">4.9&#9733;</div>
+          <div class="trust-metric-label">Rating</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div class="section-divider"></div>
+
+  <!-- ========================================
+       FEATURES
+       ======================================== -->
+  <div id="features"></div>
+
+  <!-- Feature 1: DATABASE -->
+  <section class="feature-section">
+    <div class="container">
+      <div class="feature-layout">
+        <div class="feature-text">
+          <div class="feature-label reveal">DATABASE</div>
+          <h2 class="feature-heading reveal reveal-delay-1">SQLite locally.<br>Postgres in production.</h2>
+          <p class="feature-description reveal reveal-delay-2">
+            Define your schema once. VibeKit auto-detects the environment and uses the right database. Zero configuration, full SQL power.
+          </p>
+          <a href="#" class="feature-link reveal reveal-delay-3">
+            Learn about Database <span class="feature-link-arrow">&rarr;</span>
+          </a>
+        </div>
+        <div class="reveal reveal-delay-3">
+          <div class="feature-demo" id="dbDemo">
+            <div class="feature-demo-bar">
+              <span class="feature-demo-bar-dot"></span>
+              <span class="feature-demo-bar-dot"></span>
+              <span class="feature-demo-bar-dot"></span>
+              <span class="feature-demo-bar-title">query.ts</span>
+            </div>
+            <div class="feature-demo-content" id="dbDemoContent">
+              <div class="feature-code-line">
+                <span class="feature-code-num">1</span>
+                <span class="feature-code-text"><span class="syn-keyword">import</span> <span class="syn-bracket">{</span> <span class="syn-variable">db</span> <span class="syn-bracket">}</span> <span class="syn-keyword">from</span> <span class="syn-string">'vibekit'</span></span>
+              </div>
+              <div class="feature-code-line">
+                <span class="feature-code-num">2</span>
+                <span class="feature-code-text"></span>
+              </div>
+              <div class="feature-code-line">
+                <span class="feature-code-num">3</span>
+                <span class="feature-code-text"><span class="syn-keyword">const</span> <span class="syn-variable">users</span> <span class="syn-operator">=</span> <span class="syn-keyword">await</span> <span class="syn-variable">db</span></span>
+              </div>
+              <div class="feature-code-line">
+                <span class="feature-code-num">4</span>
+                <span class="feature-code-text">  .<span class="syn-method">from</span><span class="syn-bracket">(</span><span class="syn-string">'users'</span><span class="syn-bracket">)</span></span>
+              </div>
+              <div class="feature-code-line">
+                <span class="feature-code-num">5</span>
+                <span class="feature-code-text">  .<span class="syn-method">select</span><span class="syn-bracket">(</span><span class="syn-string">'*'</span><span class="syn-bracket">)</span></span>
+              </div>
+              <div class="feature-code-line">
+                <span class="feature-code-num">6</span>
+                <span class="feature-code-text">  .<span class="syn-method">where</span><span class="syn-bracket">(</span><span class="syn-string">'active'</span><span class="syn-plain">,</span> <span class="syn-number">true</span><span class="syn-bracket">)</span></span>
+              </div>
+              <div class="feature-code-line">
+                <span class="feature-code-num">7</span>
+                <span class="feature-code-text">  .<span class="syn-method">all</span><span class="syn-bracket">()</span></span>
+              </div>
+            </div>
+            <div class="feature-demo-result" id="dbDemoResult">
+              <div class="feature-demo-result-header">Result &middot; 3 rows</div>
+              <div class="result-row">
+                <span class="result-key">id</span>
+                <span class="result-key">name</span>
+                <span class="result-key">email</span>
+                <span class="result-key">active</span>
+              </div>
+              <div class="result-row">
+                <span class="result-val">1</span>
+                <span class="result-val">Alice Chen</span>
+                <span class="result-val">alice@co.dev</span>
+                <span class="result-val" style="color:#28C840">true</span>
+              </div>
+              <div class="result-row">
+                <span class="result-val">2</span>
+                <span class="result-val">Bob Rivera</span>
+                <span class="result-val">bob@co.dev</span>
+                <span class="result-val" style="color:#28C840">true</span>
+              </div>
+              <div class="result-row">
+                <span class="result-val">3</span>
+                <span class="result-val">Carol Wu</span>
+                <span class="result-val">carol@co.dev</span>
+                <span class="result-val" style="color:#28C840">true</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- Feature 2: AUTH -->
+  <section class="feature-section">
+    <div class="container">
+      <div class="feature-layout reverse">
+        <div class="feature-text">
+          <div class="feature-label reveal">AUTH</div>
+          <h2 class="feature-heading reveal reveal-delay-1">Email + code.<br>No passwords ever.</h2>
+          <p class="feature-description reveal reveal-delay-2">
+            Send a code, verify it, done. Sessions, middleware, and user management built in.
+          </p>
+          <a href="#" class="feature-link reveal reveal-delay-3">
+            Learn about Auth <span class="feature-link-arrow">&rarr;</span>
+          </a>
+        </div>
+        <div class="reveal reveal-delay-3">
+          <div class="feature-demo" id="authDemo">
+            <div class="feature-demo-bar">
+              <span class="feature-demo-bar-dot"></span>
+              <span class="feature-demo-bar-dot"></span>
+              <span class="feature-demo-bar-dot"></span>
+              <span class="feature-demo-bar-title">auth-flow</span>
+            </div>
+            <div class="feature-demo-content" id="authDemoContent">
+              <div class="feature-code-line" style="margin-bottom: 16px;">
+                <span class="feature-code-text"><span class="syn-comment">// Three lines. That's it.</span></span>
+              </div>
+              <div class="feature-code-line">
+                <span class="feature-code-num">1</span>
+                <span class="feature-code-text"><span class="syn-keyword">await</span> <span class="syn-variable">auth</span>.<span class="syn-method">sendCode</span><span class="syn-bracket">(</span><span class="syn-string">'user@example.com'</span><span class="syn-bracket">)</span></span>
+              </div>
+              <div class="feature-code-line">
+                <span class="feature-code-num">2</span>
+                <span class="feature-code-text"><span class="syn-keyword">const</span> <span class="syn-variable">session</span> <span class="syn-operator">=</span> <span class="syn-keyword">await</span> <span class="syn-variable">auth</span>.<span class="syn-method">verifyCode</span><span class="syn-bracket">(</span><span class="syn-string">'847293'</span><span class="syn-bracket">)</span></span>
+              </div>
+              <div class="feature-code-line">
+                <span class="feature-code-num">3</span>
+                <span class="feature-code-text"><span class="syn-keyword">const</span> <span class="syn-variable">user</span> <span class="syn-operator">=</span> <span class="syn-keyword">await</span> <span class="syn-variable">auth</span>.<span class="syn-method">getUser</span><span class="syn-bracket">(</span><span class="syn-variable">session</span><span class="syn-bracket">)</span></span>
+              </div>
+              <div style="height: 24px;"></div>
+              <div class="auth-flow-step" id="authStep1">
+                <div class="auth-flow-icon email">&#9993;</div>
+                <div class="auth-flow-text">Sending code to <span>user@example.com</span></div>
+              </div>
+              <div class="auth-flow-step" id="authStep2">
+                <div class="auth-flow-icon code">#</div>
+                <div class="auth-flow-text">Code <span>847293</span> verified</div>
+              </div>
+              <div class="auth-flow-step" id="authStep3">
+                <div class="auth-flow-icon success">&#10003;</div>
+                <div class="auth-flow-text">Session created for <span>user@example.com</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- Feature 3: STORAGE -->
+  <section class="feature-section">
+    <div class="container">
+      <div class="feature-layout">
+        <div class="feature-text">
+          <div class="feature-label reveal">STORAGE</div>
+          <h2 class="feature-heading reveal reveal-delay-1">Upload files.<br>They just work.</h2>
+          <p class="feature-description reveal reveal-delay-2">
+            Local filesystem in dev, cloud CDN in production. Upload, list, delete with one API.
+          </p>
+          <a href="#" class="feature-link reveal reveal-delay-3">
+            Learn about Storage <span class="feature-link-arrow">&rarr;</span>
+          </a>
+        </div>
+        <div class="reveal reveal-delay-3">
+          <div class="feature-demo" id="storageDemo">
+            <div class="feature-demo-bar">
+              <span class="feature-demo-bar-dot"></span>
+              <span class="feature-demo-bar-dot"></span>
+              <span class="feature-demo-bar-dot"></span>
+              <span class="feature-demo-bar-title">storage</span>
+            </div>
+            <div class="feature-demo-content" id="storageDemoContent">
+              <div class="upload-zone" id="uploadZone">
+                <div class="upload-zone-icon">&#8682;</div>
+                <div class="upload-zone-text">Drop files or click to upload</div>
+              </div>
+              <div class="upload-file" id="uploadFile1">
+                <span class="upload-file-icon">&#128196;</span>
+                <span class="upload-file-name">report-2024.pdf</span>
+                <span class="upload-file-size">2.4 MB</span>
+                <span class="upload-file-status">&#10003;</span>
+              </div>
+              <div class="upload-file" id="uploadFile2">
+                <span class="upload-file-icon">&#127912;</span>
+                <span class="upload-file-name">hero-image.png</span>
+                <span class="upload-file-size">847 KB</span>
+                <span class="upload-file-status">&#10003;</span>
+              </div>
+              <div class="upload-file" id="uploadFile3">
+                <span class="upload-file-icon">&#128190;</span>
+                <span class="upload-file-name">backup.sql</span>
+                <span class="upload-file-size">12.1 MB</span>
+                <span class="upload-file-status">&#10003;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- Feature 4: DEPLOYMENT -->
+  <section class="feature-section">
+    <div class="container">
+      <div class="feature-layout reverse">
+        <div class="feature-text">
+          <div class="feature-label reveal">DEPLOY</div>
+          <h2 class="feature-heading reveal reveal-delay-1">One command.<br>Globally distributed.</h2>
+          <p class="feature-description reveal reveal-delay-2">
+            vibekit deploy. That's it. Frontend on Cloudflare's edge, backend on Fly.io.
+          </p>
+          <a href="#" class="feature-link reveal reveal-delay-3">
+            Learn about Deploy <span class="feature-link-arrow">&rarr;</span>
+          </a>
+        </div>
+        <div class="reveal reveal-delay-3">
+          <div class="feature-demo" id="deployDemo">
+            <div class="feature-demo-bar">
+              <span class="feature-demo-bar-dot"></span>
+              <span class="feature-demo-bar-dot"></span>
+              <span class="feature-demo-bar-dot"></span>
+              <span class="feature-demo-bar-title">deployment</span>
+            </div>
+            <div class="feature-demo-content" id="deployDemoContent">
+              <div class="feature-code-line" style="margin-bottom: 20px;">
+                <span class="feature-code-text" style="color:#00A3FF;">$</span>
+                <span class="feature-code-text" style="color:#EDEDED;"> vibekit deploy --prod</span>
+              </div>
+              <div class="deploy-step" id="deployStep1">
+                <div class="deploy-step-icon pending" id="deployIcon1">&#9679;</div>
+                <span class="deploy-step-text" id="deployText1">Building application</span>
+                <span class="deploy-step-time" id="deployTime1"></span>
+              </div>
+              <div class="deploy-step" id="deployStep2">
+                <div class="deploy-step-icon pending" id="deployIcon2">&#9679;</div>
+                <span class="deploy-step-text" id="deployText2">Deploying database migrations</span>
+                <span class="deploy-step-time" id="deployTime2"></span>
+              </div>
+              <div class="deploy-step" id="deployStep3">
+                <div class="deploy-step-icon pending" id="deployIcon3">&#9679;</div>
+                <span class="deploy-step-text" id="deployText3">Pushing to edge network</span>
+                <span class="deploy-step-time" id="deployTime3"></span>
+              </div>
+              <div class="deploy-step" id="deployStep4">
+                <div class="deploy-step-icon pending" id="deployIcon4">&#9679;</div>
+                <span class="deploy-step-text" id="deployText4">Configuring SSL & domains</span>
+                <span class="deploy-step-time" id="deployTime4"></span>
+              </div>
+              <div class="deploy-step" id="deployStep5">
+                <div class="deploy-step-icon pending" id="deployIcon5">&#9679;</div>
+                <span class="deploy-step-text" id="deployText5">Health checks passing</span>
+                <span class="deploy-step-time" id="deployTime5"></span>
+              </div>
+              <div class="deploy-url" id="deployUrl">
+                &#10003; Live at <span style="color:#EDEDED;">https://my-app.vibekit.dev</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ========================================
+       HOW IT WORKS
+       ======================================== -->
+  <section class="how-it-works">
+    <div class="container">
+      <div class="how-header">
+        <div class="how-label reveal">HOW IT WORKS</div>
+        <h2 class="how-heading reveal reveal-delay-1">Three steps. Thirty seconds.</h2>
+        <p class="how-subtext reveal reveal-delay-2">From zero to deployed backend faster than you can write a config file.</p>
+      </div>
+
+      <div class="how-steps">
+        <div class="how-step reveal reveal-delay-1">
+          <div class="how-step-number">1</div>
+          <h3 class="how-step-title">Create your project</h3>
+          <p class="how-step-desc">
+            One command scaffolds your entire backend. Database, auth, storage, and API routes are all configured automatically.
+          </p>
+          <div class="how-step-code">
+            <span class="cmd">$</span> <span class="arg">npx create-vibekit my-app</span>
+          </div>
+          <div class="how-connector"></div>
+        </div>
+
+        <div class="how-step reveal reveal-delay-2">
+          <div class="how-step-number">2</div>
+          <h3 class="how-step-title">Write your logic</h3>
+          <p class="how-step-desc">
+            Import what you need. Database queries, auth flows, file uploads. Everything works together with a single import.
+          </p>
+          <div class="how-step-code">
+            <span class="kw" style="color:#C678DD">import</span> <span style="color:#ABB2BF">{ db, auth }</span> <span class="kw" style="color:#C678DD">from</span> <span style="color:#98C379">'vibekit'</span>
+          </div>
+          <div class="how-connector"></div>
+        </div>
+
+        <div class="how-step reveal reveal-delay-3">
+          <div class="how-step-number">3</div>
+          <h3 class="how-step-title">Deploy globally</h3>
+          <p class="how-step-desc">
+            One command deploys everything. Frontend to the edge, backend to the cloud, database provisioned and migrated.
+          </p>
+          <div class="how-step-code">
+            <span class="cmd">$</span> <span class="arg">vibekit deploy</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ========================================
+       CODE COMPARISON
+       ======================================== -->
+  <section class="comparison-section">
+    <div class="container">
+      <div class="comparison-header">
+        <div class="comparison-label reveal">BEFORE & AFTER</div>
+        <h2 class="comparison-heading reveal reveal-delay-1">Replace your entire stack</h2>
+        <p class="comparison-subtext reveal reveal-delay-2">What used to take 6 packages and 40 lines now takes 1 import and 4 lines.</p>
+      </div>
+
+      <div class="comparison-grid reveal reveal-delay-3">
+        <!-- Before panel -->
+        <div class="comparison-panel">
+          <div class="comparison-panel-header">
+            <span class="comparison-panel-title">Traditional stack</span>
+            <span class="comparison-panel-badge old">BEFORE</span>
+          </div>
+          <div class="comparison-panel-body">
+            <div class="comp-line"><span class="comp-num">1</span><span class="comp-code"><span class="cm">// Install and configure 6+ packages</span></span></div>
+            <div class="comp-line"><span class="comp-num">2</span><span class="comp-code"><span class="kw">import</span> <span class="br">{</span> <span class="var">createClient</span> <span class="br">}</span> <span class="kw">from</span> <span class="str">'@supabase/supabase-js'</span></span></div>
+            <div class="comp-line"><span class="comp-num">3</span><span class="comp-code"><span class="kw">import</span> <span class="var">express</span> <span class="kw">from</span> <span class="str">'express'</span></span></div>
+            <div class="comp-line"><span class="comp-num">4</span><span class="comp-code"><span class="kw">import</span> <span class="var">multer</span> <span class="kw">from</span> <span class="str">'multer'</span></span></div>
+            <div class="comp-line"><span class="comp-num">5</span><span class="comp-code"><span class="kw">import</span> <span class="var">nodemailer</span> <span class="kw">from</span> <span class="str">'nodemailer'</span></span></div>
+            <div class="comp-line"><span class="comp-num">6</span><span class="comp-code"><span class="kw">import</span> <span class="var">jwt</span> <span class="kw">from</span> <span class="str">'jsonwebtoken'</span></span></div>
+            <div class="comp-line"><span class="comp-num">7</span><span class="comp-code"><span class="kw">import</span> <span class="br">{</span> <span class="var">S3</span> <span class="br">}</span> <span class="kw">from</span> <span class="str">'@aws-sdk/client-s3'</span></span></div>
+            <div class="comp-line"><span class="comp-num">8</span><span class="comp-code"></span></div>
+            <div class="comp-line"><span class="comp-num">9</span><span class="comp-code"><span class="cm">// Configure each service separately</span></span></div>
+            <div class="comp-line"><span class="comp-num">10</span><span class="comp-code"><span class="kw">const</span> <span class="var">supabase</span> <span class="op">=</span> <span class="fn">createClient</span><span class="br">(</span></span></div>
+            <div class="comp-line"><span class="comp-num">11</span><span class="comp-code">  <span class="var">process</span>.<span class="prop">env</span>.<span class="var">SUPABASE_URL</span><span class="br">,</span></span></div>
+            <div class="comp-line"><span class="comp-num">12</span><span class="comp-code">  <span class="var">process</span>.<span class="prop">env</span>.<span class="var">SUPABASE_KEY</span></span></div>
+            <div class="comp-line"><span class="comp-num">13</span><span class="comp-code"><span class="br">)</span></span></div>
+            <div class="comp-line"><span class="comp-num">14</span><span class="comp-code"><span class="kw">const</span> <span class="var">s3</span> <span class="op">=</span> <span class="kw">new</span> <span class="fn">S3</span><span class="br">({</span></span></div>
+            <div class="comp-line"><span class="comp-num">15</span><span class="comp-code">  <span class="prop">region</span><span class="br">:</span> <span class="var">process</span>.<span class="prop">env</span>.<span class="var">AWS_REGION</span><span class="br">,</span></span></div>
+            <div class="comp-line"><span class="comp-num">16</span><span class="comp-code">  <span class="prop">credentials</span><span class="br">: {</span> <span class="br">...</span> <span class="br">}</span></span></div>
+            <div class="comp-line"><span class="comp-num">17</span><span class="comp-code"><span class="br">})</span></span></div>
+            <div class="comp-line"><span class="comp-num">18</span><span class="comp-code"><span class="cm">// ...20+ more lines of setup</span></span></div>
+          </div>
+        </div>
+
+        <!-- VS badge -->
+        <div class="comparison-vs">
+          <div class="comparison-vs-badge">VS</div>
+        </div>
+
+        <!-- After panel -->
+        <div class="comparison-panel" style="border-color: rgba(40, 200, 64, 0.15);">
+          <div class="comparison-panel-header">
+            <span class="comparison-panel-title">With VibeKit</span>
+            <span class="comparison-panel-badge new">AFTER</span>
+          </div>
+          <div class="comparison-panel-body">
+            <div class="comp-line"><span class="comp-num">1</span><span class="comp-code"><span class="cm">// One import. Zero config.</span></span></div>
+            <div class="comp-line"><span class="comp-num">2</span><span class="comp-code"><span class="kw">import</span> <span class="br">{</span> <span class="var">db</span><span class="br">,</span> <span class="var">auth</span><span class="br">,</span> <span class="var">storage</span><span class="br">,</span> <span class="var">email</span> <span class="br">}</span> <span class="kw">from</span> <span class="str">'vibekit'</span></span></div>
+            <div class="comp-line"><span class="comp-num">3</span><span class="comp-code"></span></div>
+            <div class="comp-line"><span class="comp-num">4</span><span class="comp-code"><span class="cm">// Query your database</span></span></div>
+            <div class="comp-line"><span class="comp-num">5</span><span class="comp-code"><span class="kw">const</span> <span class="var">users</span> <span class="op">=</span> <span class="kw">await</span> <span class="var">db</span>.<span class="fn">from</span><span class="br">(</span><span class="str">'users'</span><span class="br">)</span>.<span class="fn">all</span><span class="br">()</span></span></div>
+            <div class="comp-line"><span class="comp-num">6</span><span class="comp-code"></span></div>
+            <div class="comp-line"><span class="comp-num">7</span><span class="comp-code"><span class="cm">// Authenticate users</span></span></div>
+            <div class="comp-line"><span class="comp-num">8</span><span class="comp-code"><span class="kw">await</span> <span class="var">auth</span>.<span class="fn">sendCode</span><span class="br">(</span><span class="str">'user@email.com'</span><span class="br">)</span></span></div>
+            <div class="comp-line"><span class="comp-num">9</span><span class="comp-code"></span></div>
+            <div class="comp-line"><span class="comp-num">10</span><span class="comp-code"><span class="cm">// Upload files</span></span></div>
+            <div class="comp-line"><span class="comp-num">11</span><span class="comp-code"><span class="kw">await</span> <span class="var">storage</span>.<span class="fn">upload</span><span class="br">(</span><span class="str">'photo.jpg'</span><span class="br">,</span> <span class="var">file</span><span class="br">)</span></span></div>
+            <div class="comp-line"><span class="comp-num">12</span><span class="comp-code"></span></div>
+            <div class="comp-line"><span class="comp-num">13</span><span class="comp-code"><span class="cm">// Send emails</span></span></div>
+            <div class="comp-line"><span class="comp-num">14</span><span class="comp-code"><span class="kw">await</span> <span class="var">email</span>.<span class="fn">send</span><span class="br">({</span></span></div>
+            <div class="comp-line"><span class="comp-num">15</span><span class="comp-code">  <span class="prop">to</span><span class="br">:</span> <span class="str">'user@email.com'</span><span class="br">,</span></span></div>
+            <div class="comp-line"><span class="comp-num">16</span><span class="comp-code">  <span class="prop">subject</span><span class="br">:</span> <span class="str">'Welcome!'</span></span></div>
+            <div class="comp-line"><span class="comp-num">17</span><span class="comp-code"><span class="br">})</span></span></div>
+            <div class="comp-line"><span class="comp-num">18</span><span class="comp-code"><span class="cm">// That's it. Deploy with: vibekit deploy</span></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="comparison-file-count reveal reveal-delay-4">
+        <span>6 packages, 3 config files, 40+ lines</span> &rarr; <span style="color: #28C840;">1 import, 0 config, 4 lines</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ========================================
+       PRICING
+       ======================================== -->
+  <section class="pricing-section" id="pricing">
+    <div class="container">
+      <div class="pricing-header">
+        <div class="pricing-label reveal">PRICING</div>
+        <h2 class="pricing-heading reveal reveal-delay-1">Simple, transparent pricing</h2>
+        <p class="pricing-subtext reveal reveal-delay-2">Start free. Scale when you're ready.</p>
+      </div>
+
+      <div class="pricing-grid">
+        <!-- Free -->
+        <div class="pricing-card reveal reveal-delay-1">
+          <div class="pricing-tier">Free</div>
+          <div class="pricing-price">
+            <span class="pricing-amount">$0</span>
+            <span class="pricing-period">/mo</span>
+          </div>
+          <p class="pricing-desc">Perfect for side projects and experimentation.</p>
+          <ul class="pricing-features">
+            <li>
+              <span class="pricing-check"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.5 3.5 6.5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              1 project
+            </li>
+            <li>
+              <span class="pricing-check"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.5 3.5 6.5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              10K requests/mo
+            </li>
+            <li>
+              <span class="pricing-check"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.5 3.5 6.5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              1GB storage
+            </li>
+            <li>
+              <span class="pricing-check"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.5 3.5 6.5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              SQLite database
+            </li>
+            <li>
+              <span class="pricing-check"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.5 3.5 6.5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              Community support
+            </li>
+          </ul>
+          <button class="pricing-cta pricing-cta-secondary">Get Started</button>
+        </div>
+
+        <!-- Pro -->
+        <div class="pricing-card featured reveal reveal-delay-2">
+          <div class="pricing-badge">Most Popular</div>
+          <div class="pricing-tier">Pro</div>
+          <div class="pricing-price">
+            <span class="pricing-amount">$29</span>
+            <span class="pricing-period">/mo</span>
+          </div>
+          <p class="pricing-desc">For production apps that need to scale.</p>
+          <ul class="pricing-features">
+            <li>
+              <span class="pricing-check"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.5 3.5 6.5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              Unlimited projects
+            </li>
+            <li>
+              <span class="pricing-check"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.5 3.5 6.5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              1M requests/mo
+            </li>
+            <li>
+              <span class="pricing-check"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.5 3.5 6.5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              50GB storage
+            </li>
+            <li>
+              <span class="pricing-check"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.5 3.5 6.5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              Postgres database
+            </li>
+            <li>
+              <span class="pricing-check"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.5 3.5 6.5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              Custom domains
+            </li>
+            <li>
+              <span class="pricing-check"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.5 3.5 6.5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              Priority email support
+            </li>
+          </ul>
+          <button class="pricing-cta pricing-cta-primary">Get Started</button>
+        </div>
+
+        <!-- Team -->
+        <div class="pricing-card reveal reveal-delay-3">
+          <div class="pricing-tier">Team</div>
+          <div class="pricing-price">
+            <span class="pricing-amount">$79</span>
+            <span class="pricing-period">/mo</span>
+          </div>
+          <p class="pricing-desc">For teams that need collaboration and compliance.</p>
+          <ul class="pricing-features">
+            <li>
+              <span class="pricing-check"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.5 3.5 6.5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              Everything in Pro
+            </li>
+            <li>
+              <span class="pricing-check"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.5 3.5 6.5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              Team members
+            </li>
+            <li>
+              <span class="pricing-check"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.5 3.5 6.5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              Audit logs
+            </li>
+            <li>
+              <span class="pricing-check"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.5 3.5 6.5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              Priority support
+            </li>
+            <li>
+              <span class="pricing-check"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.5 3.5 6.5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              99.99% SLA
+            </li>
+            <li>
+              <span class="pricing-check"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.5 3.5 6.5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              SOC 2 compliance
+            </li>
+          </ul>
+          <button class="pricing-cta pricing-cta-secondary">Contact Sales</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ========================================
+       BOTTOM CTA
+       ======================================== -->
+  <section class="bottom-cta">
+    <div class="container bottom-cta-content">
+      <h2 class="reveal">Start building in 30 seconds</h2>
+      <p class="bottom-cta-sub reveal reveal-delay-1">No credit card required. Free tier forever.</p>
+      <div class="reveal reveal-delay-2">
+        <a href="#" class="btn-primary">
+          Get Started Free
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ========================================
+       FOOTER
+       ======================================== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="footer-brand-name">
+            <div class="footer-brand-icon"></div>
+            VibeKit
+          </div>
+          <p class="footer-brand-desc">
+            The complete backend for AI-coded apps. Database, auth, storage, email, and deployment in one package.
+          </p>
+        </div>
+
+        <div class="footer-col">
+          <div class="footer-col-title">Product</div>
+          <div class="footer-col-links">
+            <a href="#">Features</a>
+            <a href="#">Pricing</a>
+            <a href="#">Dashboard</a>
+            <a href="#">CLI</a>
+            <a href="#">MCP Server</a>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <div class="footer-col-title">Developers</div>
+          <div class="footer-col-links">
+            <a href="#">Documentation</a>
+            <a href="#">API Reference</a>
+            <a href="#">Examples</a>
+            <a href="#">Status</a>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <div class="footer-col-title">Company</div>
+          <div class="footer-col-links">
+            <a href="#">About</a>
+            <a href="#">Blog</a>
+            <a href="#">Careers</a>
+            <a href="#">Contact</a>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <div class="footer-col-title">Legal</div>
+          <div class="footer-col-links">
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span class="footer-copyright">&copy; 2025 VibeKit. All rights reserved.</span>
+        <div class="footer-bottom-links">
+          <a href="#">Twitter</a>
+          <a href="#">GitHub</a>
+          <a href="#">Discord</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========================================
+       JAVASCRIPT
+       ======================================== -->
+  <script>
+    /* ========================================
+       INTERSECTION OBSERVER - SCROLL REVEALS
+       ======================================== */
+    (function initRevealAnimations() {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        {
+          threshold: 0.1,
+          rootMargin: '0px 0px -40px 0px',
+        }
+      );
+
+      document.querySelectorAll('.reveal').forEach((el) => {
+        observer.observe(el);
+      });
+    })();
+
+    /* ========================================
+       MOBILE NAV
+       ======================================== */
+    (function initMobileNav() {
+      const hamburger = document.getElementById('navHamburger');
+      const mobile = document.getElementById('navMobile');
+      const overlay = document.getElementById('navOverlay');
+
+      function toggleMenu() {
+        const isOpen = mobile.classList.contains('open');
+        if (isOpen) {
+          mobile.classList.remove('open');
+          hamburger.classList.remove('active');
+          overlay.classList.remove('active');
+          setTimeout(() => { overlay.style.display = 'none'; }, 300);
+        } else {
+          overlay.style.display = 'block';
+          requestAnimationFrame(() => {
+            mobile.classList.add('open');
+            hamburger.classList.add('active');
+            overlay.classList.add('active');
+          });
+        }
+      }
+
+      hamburger.addEventListener('click', toggleMenu);
+      overlay.addEventListener('click', toggleMenu);
+
+      // Close on link click
+      mobile.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', () => {
+          if (mobile.classList.contains('open')) {
+            toggleMenu();
+          }
+        });
+      });
+    })();
+
+    /* ========================================
+       PRODUCT DEMO ANIMATION
+       ======================================== */
+    (function initProductDemo() {
+      const terminalContent = document.getElementById('terminalContent');
+      const editorLines = document.getElementById('editorLines');
+      const demoEditor = document.getElementById('demoEditor');
+      const demoTerminal = document.getElementById('demoTerminal');
+      const tabTerminal = document.getElementById('demoTabTerminal');
+      const tabEditor = document.getElementById('demoTabEditor');
+
+      // State
+      let animationTimer = null;
+
+      function clearTerminal() {
+        terminalContent.innerHTML = '';
+      }
+
+      function clearEditor() {
+        editorLines.innerHTML = '';
+      }
+
+      function showTerminal() {
+        demoEditor.classList.remove('active');
+        demoTerminal.style.display = 'block';
+        demoTerminal.style.borderTop = 'none';
+        tabTerminal.classList.add('active');
+        tabEditor.classList.remove('active');
+      }
+
+      function showEditor() {
+        demoEditor.classList.add('active');
+        demoTerminal.style.display = 'block';
+        demoTerminal.style.borderTop = '1px solid #1A1A1A';
+        tabEditor.classList.add('active');
+        tabTerminal.classList.remove('active');
+      }
+
+      function showEditorOnly() {
+        demoEditor.classList.add('active');
+        demoTerminal.style.display = 'none';
+        tabEditor.classList.add('active');
+        tabTerminal.classList.remove('active');
+      }
+
+      // Typing utility
+      function typeText(container, text, options = {}) {
+        return new Promise((resolve) => {
+          const {
+            minDelay = 30,
+            maxDelay = 70,
+            promptHtml = '',
+            className = 'term-text',
+          } = options;
+
+          const line = document.createElement('div');
+          line.className = 'term-line';
+          line.innerHTML = promptHtml;
+
+          const textSpan = document.createElement('span');
+          textSpan.className = className;
+          line.appendChild(textSpan);
+
+          const cursor = document.createElement('span');
+          cursor.className = 'typing-cursor';
+          line.appendChild(cursor);
+
+          container.appendChild(line);
+
+          let i = 0;
+          function typeChar() {
+            if (i < text.length) {
+              textSpan.textContent += text[i];
+              i++;
+              const delay = minDelay + Math.random() * (maxDelay - minDelay);
+              animationTimer = setTimeout(typeChar, delay);
+            } else {
+              cursor.remove();
+              resolve(line);
+            }
+          }
+          typeChar();
+        });
+      }
+
+      // Add terminal output line
+      function addTermOutput(container, text, className = 'term-output', delay = 0) {
+        return new Promise((resolve) => {
+          animationTimer = setTimeout(() => {
+            const line = document.createElement('div');
+            line.className = 'term-line';
+            const span = document.createElement('span');
+            span.className = className;
+            span.textContent = text;
+            line.appendChild(span);
+            line.style.opacity = '0';
+            line.style.transform = 'translateY(4px)';
+            container.appendChild(line);
+            requestAnimationFrame(() => {
+              line.style.transition = 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+              line.style.opacity = '1';
+              line.style.transform = 'translateY(0)';
+            });
+            resolve(line);
+          }, delay);
+        });
+      }
+
+      // Add editor line with syntax highlighting
+      function addEditorLine(container, lineNum, html, delay = 0) {
+        return new Promise((resolve) => {
+          animationTimer = setTimeout(() => {
+            const line = document.createElement('div');
+            line.className = 'demo-line';
+            line.innerHTML = `<span class="demo-line-num">${lineNum}</span><span class="demo-line-content">${html}</span>`;
+            line.style.opacity = '0';
+            line.style.transform = 'translateY(4px)';
+            container.appendChild(line);
+            requestAnimationFrame(() => {
+              line.style.transition = 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+              line.style.opacity = '1';
+              line.style.transform = 'translateY(0)';
+            });
+            resolve(line);
+          }, delay);
+        });
+      }
+
+      // Type editor line character by character with syntax highlighting
+      function typeEditorLine(container, lineNum, finalHtml, plainText, options = {}) {
+        return new Promise((resolve) => {
+          const { minDelay = 30, maxDelay = 60 } = options;
+
+          const line = document.createElement('div');
+          line.className = 'demo-line';
+
+          const numSpan = document.createElement('span');
+          numSpan.className = 'demo-line-num';
+          numSpan.textContent = lineNum;
+
+          const contentSpan = document.createElement('span');
+          contentSpan.className = 'demo-line-content';
+
+          const textNode = document.createElement('span');
+          textNode.style.color = '#ABB2BF';
+
+          const cursor = document.createElement('span');
+          cursor.className = 'typing-cursor';
+
+          contentSpan.appendChild(textNode);
+          contentSpan.appendChild(cursor);
+          line.appendChild(numSpan);
+          line.appendChild(contentSpan);
+          container.appendChild(line);
+
+          let i = 0;
+          function typeChar() {
+            if (i < plainText.length) {
+              textNode.textContent += plainText[i];
+              i++;
+              const delay = minDelay + Math.random() * (maxDelay - minDelay);
+              animationTimer = setTimeout(typeChar, delay);
+            } else {
+              // Replace with syntax-highlighted version
+              cursor.remove();
+              contentSpan.innerHTML = finalHtml;
+              resolve(line);
+            }
+          }
+          typeChar();
+        });
+      }
+
+      // Main animation sequence
+      async function runDemoSequence() {
+        // Step 1: Fade in terminal (0-3s)
+        clearTerminal();
+        clearEditor();
+        showTerminal();
+
+        await new Promise(r => animationTimer = setTimeout(r, 500));
+
+        // Step 2: Type npx command (3-8s)
+        await typeText(terminalContent, 'npx create-vibekit my-app', {
+          promptHtml: '<span class="term-prompt">~</span>',
+          minDelay: 40,
+          maxDelay: 80,
+        });
+
+        await new Promise(r => animationTimer = setTimeout(r, 600));
+
+        // Step 3: Show output (8-10s)
+        await addTermOutput(terminalContent, '', 'term-output', 0);
+        await addTermOutput(terminalContent, '  Creating project...', 'term-output', 200);
+        await addTermOutput(terminalContent, '  Setting up database...', 'term-output', 600);
+        await addTermOutput(terminalContent, '  Configuring auth...', 'term-output', 500);
+        await addTermOutput(terminalContent, '  Installing dependencies...', 'term-output', 400);
+
+        await new Promise(r => animationTimer = setTimeout(r, 800));
+
+        await addTermOutput(terminalContent, '', 'term-output', 0);
+        await addTermOutput(terminalContent, '  \u2713 Project created successfully!', 'term-success', 200);
+
+        await new Promise(r => animationTimer = setTimeout(r, 1200));
+
+        // Step 4: Switch to editor view, type code (10-18s)
+        clearTerminal();
+        clearEditor();
+        showEditor();
+
+        // Type import line
+        await typeEditorLine(
+          editorLines, 1,
+          '<span class="syn-keyword">import</span> <span class="syn-bracket">{</span> <span class="syn-variable">db</span><span class="syn-plain">,</span> <span class="syn-variable">auth</span><span class="syn-plain">,</span> <span class="syn-variable">storage</span> <span class="syn-bracket">}</span> <span class="syn-keyword">from</span> <span class="syn-string">\'vibekit\'</span>',
+          "import { db, auth, storage } from 'vibekit'",
+          { minDelay: 25, maxDelay: 55 }
+        );
+
+        await addEditorLine(editorLines, 2, '', 100);
+
+        // Type db query
+        await typeEditorLine(
+          editorLines, 3,
+          '<span class="syn-keyword">const</span> <span class="syn-variable">users</span> <span class="syn-operator">=</span> <span class="syn-keyword">await</span> <span class="syn-variable">db</span>.<span class="syn-method">from</span><span class="syn-bracket">(</span><span class="syn-string">\'users\'</span><span class="syn-bracket">)</span>.<span class="syn-method">select</span><span class="syn-bracket">(</span><span class="syn-string">\'*\'</span><span class="syn-bracket">)</span>.<span class="syn-method">all</span><span class="syn-bracket">()</span>',
+          "const users = await db.from('users').select('*').all()",
+          { minDelay: 20, maxDelay: 50 }
+        );
+
+        await addEditorLine(editorLines, 4, '', 100);
+
+        // Type auth line
+        await typeEditorLine(
+          editorLines, 5,
+          '<span class="syn-keyword">await</span> <span class="syn-variable">auth</span>.<span class="syn-method">sendCode</span><span class="syn-bracket">(</span><span class="syn-string">\'user@example.com\'</span><span class="syn-bracket">)</span>',
+          "await auth.sendCode('user@example.com')",
+          { minDelay: 25, maxDelay: 55 }
+        );
+
+        await addEditorLine(editorLines, 6, '', 100);
+
+        // Type storage line
+        await typeEditorLine(
+          editorLines, 7,
+          '<span class="syn-keyword">const</span> <span class="syn-variable">url</span> <span class="syn-operator">=</span> <span class="syn-keyword">await</span> <span class="syn-variable">storage</span>.<span class="syn-method">upload</span><span class="syn-bracket">(</span><span class="syn-string">\'photo.jpg\'</span><span class="syn-plain">,</span> <span class="syn-variable">file</span><span class="syn-bracket">)</span>',
+          "const url = await storage.upload('photo.jpg', file)",
+          { minDelay: 25, maxDelay: 55 }
+        );
+
+        await new Promise(r => animationTimer = setTimeout(r, 800));
+
+        // Step 5: Show terminal output - server running (18-22s)
+        clearTerminal();
+        await addTermOutput(terminalContent, '', 'term-output', 0);
+        await addTermOutput(terminalContent, '  Compiling...', 'term-output', 200);
+
+        await new Promise(r => animationTimer = setTimeout(r, 800));
+
+        await addTermOutput(terminalContent, '', 'term-output', 0);
+        await addTermOutput(terminalContent, '  \u2713 Server running on http://localhost:3000', 'term-success', 200);
+        await addTermOutput(terminalContent, '  \u2713 Database connected (SQLite)', 'term-success', 400);
+        await addTermOutput(terminalContent, '  \u2713 Auth routes mounted at /api/auth', 'term-success', 300);
+        await addTermOutput(terminalContent, '  \u2713 Storage ready (local filesystem)', 'term-success', 300);
+
+        await new Promise(r => animationTimer = setTimeout(r, 600));
+
+        await addTermOutput(terminalContent, '', 'term-output', 0);
+        await addTermOutput(terminalContent, '  Ready in 1.2s', 'term-output', 200);
+
+        // Step 6: Hold (22-25s)
+        await new Promise(r => animationTimer = setTimeout(r, 3000));
+
+        // Crossfade restart
+        const demoContainer = document.getElementById('productDemo');
+        demoContainer.style.transition = 'opacity 0.6s ease';
+        demoContainer.style.opacity = '0';
+        await new Promise(r => animationTimer = setTimeout(r, 600));
+        demoContainer.style.opacity = '1';
+
+        // Loop
+        runDemoSequence();
+      }
+
+      // Start when visible
+      const demoObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              runDemoSequence();
+              demoObserver.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.2 }
+      );
+
+      demoObserver.observe(document.getElementById('productDemo'));
+    })();
+
+    /* ========================================
+       FEATURE: AUTH DEMO ANIMATION
+       ======================================== */
+    (function initAuthDemo() {
+      const steps = [
+        document.getElementById('authStep1'),
+        document.getElementById('authStep2'),
+        document.getElementById('authStep3'),
+      ];
+
+      let animating = false;
+
+      function runAuthAnimation() {
+        if (animating) return;
+        animating = true;
+
+        // Reset
+        steps.forEach((s) => s.classList.remove('visible'));
+
+        // Stagger reveal
+        steps.forEach((step, i) => {
+          setTimeout(() => {
+            step.classList.add('visible');
+          }, 800 + i * 800);
+        });
+
+        // Reset and loop
+        setTimeout(() => {
+          animating = false;
+          steps.forEach((s) => {
+            s.style.transition = 'all 0.3s';
+            s.classList.remove('visible');
+          });
+          setTimeout(() => {
+            steps.forEach((s) => {
+              s.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+            });
+            runAuthAnimation();
+          }, 600);
+        }, 5000);
+      }
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              runAuthAnimation();
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.3 }
+      );
+
+      observer.observe(document.getElementById('authDemo'));
+    })();
+
+    /* ========================================
+       FEATURE: STORAGE DEMO ANIMATION
+       ======================================== */
+    (function initStorageDemo() {
+      const zone = document.getElementById('uploadZone');
+      const files = [
+        document.getElementById('uploadFile1'),
+        document.getElementById('uploadFile2'),
+        document.getElementById('uploadFile3'),
+      ];
+
+      let animating = false;
+
+      function runStorageAnimation() {
+        if (animating) return;
+        animating = true;
+
+        // Reset
+        zone.classList.remove('active');
+        files.forEach((f) => f.classList.remove('visible'));
+
+        // Activate zone
+        setTimeout(() => {
+          zone.classList.add('active');
+        }, 500);
+
+        // Show files
+        files.forEach((file, i) => {
+          setTimeout(() => {
+            file.classList.add('visible');
+          }, 1200 + i * 600);
+        });
+
+        // Deactivate zone after files appear
+        setTimeout(() => {
+          zone.classList.remove('active');
+        }, 3200);
+
+        // Reset and loop
+        setTimeout(() => {
+          animating = false;
+          files.forEach((f) => {
+            f.style.transition = 'all 0.3s';
+            f.classList.remove('visible');
+          });
+          setTimeout(() => {
+            files.forEach((f) => {
+              f.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+            });
+            runStorageAnimation();
+          }, 600);
+        }, 6000);
+      }
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              runStorageAnimation();
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.3 }
+      );
+
+      observer.observe(document.getElementById('storageDemo'));
+    })();
+
+    /* ========================================
+       FEATURE: DEPLOY DEMO ANIMATION
+       ======================================== */
+    (function initDeployDemo() {
+      const steps = [
+        { icon: 'deployIcon1', text: 'deployText1', time: 'deployTime1', duration: '2.1s' },
+        { icon: 'deployIcon2', text: 'deployText2', time: 'deployTime2', duration: '1.8s' },
+        { icon: 'deployIcon3', text: 'deployText3', time: 'deployTime3', duration: '3.2s' },
+        { icon: 'deployIcon4', text: 'deployText4', time: 'deployTime4', duration: '0.9s' },
+        { icon: 'deployIcon5', text: 'deployText5', time: 'deployTime5', duration: '0.4s' },
+      ];
+      const deployUrl = document.getElementById('deployUrl');
+
+      let animating = false;
+
+      function resetDeploy() {
+        steps.forEach((s) => {
+          const icon = document.getElementById(s.icon);
+          const text = document.getElementById(s.text);
+          const time = document.getElementById(s.time);
+          icon.className = 'deploy-step-icon pending';
+          icon.innerHTML = '&#9679;';
+          text.className = 'deploy-step-text';
+          time.textContent = '';
+        });
+        deployUrl.classList.remove('visible');
+      }
+
+      function runDeployAnimation() {
+        if (animating) return;
+        animating = true;
+        resetDeploy();
+
+        let delay = 800;
+
+        steps.forEach((s, i) => {
+          // Start running
+          setTimeout(() => {
+            const icon = document.getElementById(s.icon);
+            const text = document.getElementById(s.text);
+            icon.className = 'deploy-step-icon running';
+            icon.innerHTML = '&#8635;';
+            text.className = 'deploy-step-text active';
+          }, delay);
+
+          // Complete
+          setTimeout(() => {
+            const icon = document.getElementById(s.icon);
+            const text = document.getElementById(s.text);
+            const time = document.getElementById(s.time);
+            icon.className = 'deploy-step-icon done';
+            icon.innerHTML = '&#10003;';
+            text.className = 'deploy-step-text';
+            time.textContent = s.duration;
+          }, delay + 800);
+
+          delay += 1000;
+        });
+
+        // Show URL
+        setTimeout(() => {
+          deployUrl.classList.add('visible');
+        }, delay + 400);
+
+        // Reset and loop
+        setTimeout(() => {
+          animating = false;
+          resetDeploy();
+          setTimeout(runDeployAnimation, 600);
+        }, delay + 4000);
+      }
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              runDeployAnimation();
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.3 }
+      );
+
+      observer.observe(document.getElementById('deployDemo'));
+    })();
+
+    /* ========================================
+       ANIMATED COUNTER FOR TRUST METRICS
+       ======================================== */
+    (function initCounters() {
+      const counters = document.querySelectorAll('.trust-metric-value');
+      const counterTargets = [
+        { el: counters[0], target: 10000, suffix: '+', prefix: '' },
+        { el: counters[1], target: 50000, suffix: '+', prefix: '' },
+        { el: counters[2], target: 99.9, suffix: '%', prefix: '', decimals: 1 },
+        { el: counters[3], target: 4.9, suffix: '\u2605', prefix: '', decimals: 1 },
+      ];
+
+      let animated = false;
+
+      function animateCounters() {
+        if (animated) return;
+        animated = true;
+
+        counterTargets.forEach(({ el, target, suffix, prefix, decimals }) => {
+          if (!el) return;
+          const duration = 2000;
+          const startTime = performance.now();
+          const isDecimal = decimals && decimals > 0;
+
+          function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            // Ease out cubic
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const current = eased * target;
+
+            if (isDecimal) {
+              el.textContent = prefix + current.toFixed(decimals) + suffix;
+            } else {
+              el.textContent = prefix + Math.floor(current).toLocaleString() + suffix;
+            }
+
+            if (progress < 1) {
+              requestAnimationFrame(update);
+            }
+          }
+
+          requestAnimationFrame(update);
+        });
+      }
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              animateCounters();
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.3 }
+      );
+
+      const trustSection = document.querySelector('.trust-metrics');
+      if (trustSection) {
+        observer.observe(trustSection);
+      }
+    })();
+
+    /* ========================================
+       HOW IT WORKS - STEP HOVER EFFECTS
+       ======================================== */
+    (function initHowItWorksHover() {
+      const steps = document.querySelectorAll('.how-step');
+      steps.forEach((step) => {
+        step.addEventListener('mouseenter', () => {
+          step.style.transform = 'translateY(-4px)';
+          step.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+        });
+        step.addEventListener('mouseleave', () => {
+          step.style.transform = 'translateY(0)';
+        });
+      });
+    })();
+
+    /* ========================================
+       PRICING CARD HOVER GLOW
+       ======================================== */
+    (function initPricingHover() {
+      const cards = document.querySelectorAll('.pricing-card');
+      cards.forEach((card) => {
+        card.addEventListener('mousemove', (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          card.style.background = `radial-gradient(circle 200px at ${x}px ${y}px, rgba(0, 163, 255, 0.03), #0D0D0D)`;
+        });
+        card.addEventListener('mouseleave', () => {
+          card.style.background = '#0D0D0D';
+        });
+      });
+    })();
+
+    /* ========================================
+       COMPARISON SECTION LINE REVEAL
+       ======================================== */
+    (function initComparisonReveal() {
+      const compGrid = document.querySelector('.comparison-grid');
+      if (!compGrid) return;
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              // Stagger reveal the lines in the "After" panel
+              const afterPanel = compGrid.querySelectorAll('.comparison-panel')[1];
+              if (afterPanel) {
+                const lines = afterPanel.querySelectorAll('.comp-line');
+                lines.forEach((line, i) => {
+                  line.style.opacity = '0';
+                  line.style.transform = 'translateX(-8px)';
+                  line.style.transition = `all 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${i * 80}ms`;
+                  requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                      line.style.opacity = '1';
+                      line.style.transform = 'translateX(0)';
+                    });
+                  });
+                });
+              }
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.2 }
+      );
+
+      observer.observe(compGrid);
+    })();
+
+    /* ========================================
+       KEYBOARD SHORTCUTS - Easter egg
+       ======================================== */
+    (function initEasterEgg() {
+      const keys = [];
+      const konami = 'vibekit';
+
+      document.addEventListener('keydown', (e) => {
+        keys.push(e.key.toLowerCase());
+        if (keys.length > konami.length) {
+          keys.shift();
+        }
+        if (keys.join('') === konami) {
+          document.body.style.transition = 'filter 0.5s';
+          document.body.style.filter = 'hue-rotate(180deg)';
+          setTimeout(() => {
+            document.body.style.filter = 'none';
+          }, 2000);
+        }
+      });
+    })();
+
+    /* ========================================
+       PARALLAX EFFECT FOR HERO GLOWS
+       ======================================== */
+    (function initParallax() {
+      const hero = document.querySelector('.hero');
+      if (!hero) return;
+
+      window.addEventListener('mousemove', (e) => {
+        const x = (e.clientX / window.innerWidth - 0.5) * 20;
+        const y = (e.clientY / window.innerHeight - 0.5) * 20;
+
+        hero.style.setProperty('--mouse-x', x + 'px');
+        hero.style.setProperty('--mouse-y', y + 'px');
+      }, { passive: true });
+    })();
+
+    /* ========================================
+       SMOOTH SCROLL FOR ANCHOR LINKS
+       ======================================== */
+    (function initSmoothScroll() {
+      document.querySelectorAll('a[href^="#"]').forEach((link) => {
+        link.addEventListener('click', (e) => {
+          const target = document.querySelector(link.getAttribute('href'));
+          if (target) {
+            e.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      });
+    })();
+
+    /* ========================================
+       NAV SCROLL EFFECT
+       ======================================== */
+    (function initNavScroll() {
+      const nav = document.querySelector('.nav');
+      let lastScroll = 0;
+
+      window.addEventListener('scroll', () => {
+        const scroll = window.scrollY;
+        if (scroll > 100) {
+          nav.style.borderBottomColor = '#222222';
+        } else {
+          nav.style.borderBottomColor = '#1A1A1A';
+        }
+        lastScroll = scroll;
+      }, { passive: true });
+    })();
+
+    /* ========================================
+       STAGGERED HERO LOAD ANIMATION
+       ======================================== */
+    (function initHeroLoad() {
+      // Trigger hero reveals on load
+      setTimeout(() => {
+        document.querySelectorAll('.hero .reveal').forEach((el, i) => {
+          setTimeout(() => {
+            el.classList.add('visible');
+          }, i * 120);
+        });
+      }, 200);
+    })();
+  </script>
+</body>
+</html>

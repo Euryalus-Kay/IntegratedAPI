@@ -8,3 +8,4 @@ dist/
 .env.production
 coverage/
 .turbo/
+.DS_Store

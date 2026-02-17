@@ -326,6 +326,106 @@ const TOOLS = [
     inputSchema: { type: 'object' as const, properties: {} },
   },
 
+  // ── Project Selection & Management ────────────────────────────────────────
+  {
+    name: 'list_projects',
+    description:
+      'List all VibeKit projects accessible to the current user. Shows project ID, name, status, and region. Use the project ID with select_project to switch between projects.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        status: { type: 'string', enum: ['active', 'archived', 'all'], description: 'Filter by status (default: active)' },
+      },
+    },
+  },
+  {
+    name: 'select_project',
+    description:
+      'Select a project to work with. All subsequent database, auth, storage, and email operations will target this project. This is the primary mechanism for Claude Code to switch between projects.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        projectId: { type: 'string', description: 'The project ID to select (from list_projects or vibekit_init)' },
+        name: { type: 'string', description: 'Or select by project name' },
+      },
+    },
+  },
+  {
+    name: 'create_project',
+    description:
+      'Create a new VibeKit project. Returns the project ID which can be used with select_project. Different from vibekit_init which creates a config file — this creates a project on the VibeKit platform.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        name: { type: 'string', description: 'Project name (lowercase, hyphens allowed)' },
+        region: { type: 'string', enum: ['us-east-1', 'us-west-2', 'eu-west-1', 'ap-southeast-1'], description: 'Deployment region (default: us-east-1)' },
+        plan: { type: 'string', enum: ['free', 'pro', 'team'], description: 'Billing plan (default: free)' },
+        template: { type: 'string', enum: ['blank', 'nextjs', 'react', 'hono', 'express', 'saas'], description: 'Starter template (default: blank)' },
+      },
+      required: ['name'],
+    },
+  },
+  {
+    name: 'project_settings',
+    description:
+      'View or update the current project settings including environment variables, domains, build configuration, and notification preferences.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        action: { type: 'string', enum: ['get', 'update'], description: 'Get or update settings (default: get)' },
+        settings: {
+          type: 'object',
+          description: 'Settings to update (only used when action is "update")',
+        },
+      },
+    },
+  },
+  {
+    name: 'project_env',
+    description:
+      'Manage environment variables for the current project. Set, get, list, or remove environment variables.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        action: { type: 'string', enum: ['list', 'set', 'get', 'remove'], description: 'Action to perform' },
+        key: { type: 'string', description: 'Environment variable name' },
+        value: { type: 'string', description: 'Value to set' },
+        environment: { type: 'string', enum: ['development', 'preview', 'production', 'all'], description: 'Target environment (default: all)' },
+      },
+      required: ['action'],
+    },
+  },
+
+  // ── Notifications ──────────────────────────────────────────────────────
+  {
+    name: 'notification_preferences',
+    description:
+      'View or update notification preferences for the current project. Controls which email notifications are sent.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        action: { type: 'string', enum: ['get', 'update'], description: 'Get or update preferences' },
+        preferences: {
+          type: 'object',
+          description: 'Notification preferences to update',
+        },
+      },
+    },
+  },
+  {
+    name: 'send_test_notification',
+    description:
+      'Send a test notification email to verify notification setup is working.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        type: { type: 'string', enum: ['build-failed', 'build-succeeded', 'security-alert', 'usage-warning'], description: 'Type of test notification' },
+        email: { type: 'string', description: 'Email address to send to' },
+      },
+      required: ['type', 'email'],
+    },
+  },
+
   // ── Deploy ─────────────────────────────────────────────────────────────────
   {
     name: 'deploy',
@@ -370,6 +470,9 @@ function fail(text: string, suggestion?: string) {
 function arg<T = any>(args: unknown, key: string): T | undefined {
   return (args as Record<string, unknown>)?.[key] as T | undefined
 }
+
+// ── Project selection state ───────────────────────────────────────────────
+let _selectedProjectId: string | null = null
 
 async function readConfig() {
   const fs = await import('node:fs')
@@ -980,6 +1083,366 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           `  realtime.subscribe('my-channel', (msg) => { ... })\n` +
           `  realtime.publish('my-channel', { type: 'update', data: ... })`
         )
+      }
+
+      // ── Project Selection & Management ──────────────────────────────────
+      case 'list_projects': {
+        const fs = await import('node:fs')
+        const path = await import('node:path')
+        const projectsDir = path.join(process.env.HOME || '~', '.vibekit', 'projects')
+
+        if (!fs.existsSync(projectsDir)) {
+          fs.mkdirSync(projectsDir, { recursive: true })
+          return ok(
+            'No projects found.\n\n' +
+            'Create a project with the create_project tool, or run vibekit_init in a project directory.'
+          )
+        }
+
+        const statusFilter = arg<string>(args, 'status') || 'active'
+        const projectFiles = fs.readdirSync(projectsDir).filter((f: string) => f.endsWith('.json'))
+        const projects: any[] = []
+
+        for (const file of projectFiles) {
+          try {
+            const data = JSON.parse(fs.readFileSync(path.join(projectsDir, file), 'utf-8'))
+            if (statusFilter === 'all' || data.status === statusFilter) {
+              projects.push(data)
+            }
+          } catch {}
+        }
+
+        if (projects.length === 0) {
+          return ok(
+            'No projects found' + (statusFilter !== 'all' ? ` with status "${statusFilter}"` : '') + '.\n\n' +
+            'Create a project with the create_project tool.'
+          )
+        }
+
+        const lines = projects.map((p: any) => {
+          const selected = p.id === _selectedProjectId ? ' [SELECTED]' : ''
+          return `  ${p.id}  ${p.name.padEnd(20)} ${(p.status || 'active').padEnd(10)} ${p.region || 'us-east-1'}${selected}`
+        }).join('\n')
+
+        return ok(
+          `Projects (${projects.length}):\n\n` +
+          `  ${'ID'.padEnd(38)} ${'Name'.padEnd(20)} ${'Status'.padEnd(10)} Region\n` +
+          `  ${'─'.repeat(80)}\n` +
+          lines +
+          (_selectedProjectId ? `\n\nCurrently selected: ${_selectedProjectId}` : '\n\nNo project selected. Use select_project to choose one.')
+        )
+      }
+
+      case 'select_project': {
+        const projectId = arg<string>(args, 'projectId')
+        const projectName = arg<string>(args, 'name')
+
+        if (!projectId && !projectName) {
+          return fail('Either projectId or name is required.', 'Use list_projects to see available projects.')
+        }
+
+        const fs = await import('node:fs')
+        const path = await import('node:path')
+        const projectsDir = path.join(process.env.HOME || '~', '.vibekit', 'projects')
+
+        if (!fs.existsSync(projectsDir)) {
+          return fail('No projects found.', 'Create a project with create_project first.')
+        }
+
+        const projectFiles = fs.readdirSync(projectsDir).filter((f: string) => f.endsWith('.json'))
+
+        for (const file of projectFiles) {
+          try {
+            const data = JSON.parse(fs.readFileSync(path.join(projectsDir, file), 'utf-8'))
+            if ((projectId && data.id === projectId) || (projectName && data.name === projectName)) {
+              _selectedProjectId = data.id
+
+              // Also update the vibekit.json in cwd if it exists
+              const configData = await readConfig()
+              if (configData) {
+                configData.config.projectId = data.id
+                await writeConfig(configData.config)
+              }
+
+              return ok(
+                `Project selected: ${data.name} (${data.id})\n\n` +
+                `Region: ${data.region || 'us-east-1'}\n` +
+                `Plan: ${data.plan || 'free'}\n` +
+                `Status: ${data.status || 'active'}\n\n` +
+                `All subsequent operations will target this project.\n` +
+                `To use this in your code, set the VIBEKIT_PROJECT_ID environment variable:\n` +
+                `  export VIBEKIT_PROJECT_ID="${data.id}"\n\n` +
+                `Or add it to your vibekit.json:\n` +
+                `  { "projectId": "${data.id}" }`
+              )
+            }
+          } catch {}
+        }
+
+        return fail(
+          `Project not found: ${projectId || projectName}`,
+          'Use list_projects to see available projects.'
+        )
+      }
+
+      case 'create_project': {
+        const name = arg<string>(args, 'name')
+        if (!name) return fail('Project name is required.')
+
+        const crypto = await import('node:crypto')
+        const fs = await import('node:fs')
+        const path = await import('node:path')
+
+        const projectId = `prj_${crypto.randomUUID().replace(/-/g, '').slice(0, 20)}`
+        const region = arg<string>(args, 'region') || 'us-east-1'
+        const plan = arg<string>(args, 'plan') || 'free'
+        const template = arg<string>(args, 'template') || 'blank'
+
+        const project = {
+          id: projectId,
+          name,
+          slug: name.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+          region,
+          plan,
+          template,
+          status: 'active',
+          settings: {
+            buildCommand: 'npm run build',
+            outputDir: 'dist',
+            installCommand: 'npm install',
+            envVars: {},
+            notifications: {
+              buildFailed: true,
+              buildSucceeded: false,
+              deployRollback: true,
+              usageLimitWarning: true,
+              securityAlert: true,
+            },
+          },
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
+
+        const projectsDir = path.join(process.env.HOME || '~', '.vibekit', 'projects')
+        fs.mkdirSync(projectsDir, { recursive: true })
+        fs.writeFileSync(path.join(projectsDir, `${projectId}.json`), JSON.stringify(project, null, 2))
+
+        _selectedProjectId = projectId
+
+        return ok(
+          `Project created successfully!\n\n` +
+          `  ID:       ${projectId}\n` +
+          `  Name:     ${name}\n` +
+          `  Region:   ${region}\n` +
+          `  Plan:     ${plan}\n` +
+          `  Template: ${template}\n\n` +
+          `The project is now selected. All operations will target this project.\n\n` +
+          `To connect this to a local project directory:\n` +
+          `  1. Add to vibekit.json: { "projectId": "${projectId}" }\n` +
+          `  2. Or set env: VIBEKIT_PROJECT_ID="${projectId}"\n` +
+          `  3. Or use: npx vibekit link ${projectId}\n\n` +
+          `Next steps:\n` +
+          `  - Use create_table to define your database schema\n` +
+          `  - Use add_auth to enable authentication\n` +
+          `  - Use add_storage to enable file storage`
+        )
+      }
+
+      case 'project_settings': {
+        const action = arg<string>(args, 'action') || 'get'
+
+        if (!_selectedProjectId) {
+          const configData = await readConfig()
+          if (configData?.config?.projectId) {
+            _selectedProjectId = configData.config.projectId
+          } else {
+            return fail('No project selected.', 'Use select_project or create_project first.')
+          }
+        }
+
+        const fs = await import('node:fs')
+        const path = await import('node:path')
+        const projectFile = path.join(process.env.HOME || '~', '.vibekit', 'projects', `${_selectedProjectId}.json`)
+
+        if (!fs.existsSync(projectFile)) {
+          return fail('Project file not found.', 'The selected project may have been deleted.')
+        }
+
+        const project = JSON.parse(fs.readFileSync(projectFile, 'utf-8'))
+
+        if (action === 'get') {
+          return ok(`Project Settings for "${project.name}" (${project.id}):\n\n${JSON.stringify(project.settings, null, 2)}`)
+        }
+
+        const newSettings = arg<any>(args, 'settings')
+        if (!newSettings) return fail('Settings object is required for update.')
+
+        project.settings = { ...project.settings, ...newSettings }
+        project.updated_at = new Date().toISOString()
+        fs.writeFileSync(projectFile, JSON.stringify(project, null, 2))
+
+        return ok(`Project settings updated.\n\n${JSON.stringify(project.settings, null, 2)}`)
+      }
+
+      case 'project_env': {
+        const action = arg<string>(args, 'action')
+        if (!action) return fail('Action is required (list, set, get, remove).')
+
+        if (!_selectedProjectId) {
+          const configData = await readConfig()
+          if (configData?.config?.projectId) {
+            _selectedProjectId = configData.config.projectId
+          } else {
+            return fail('No project selected.', 'Use select_project first.')
+          }
+        }
+
+        const fs = await import('node:fs')
+        const path = await import('node:path')
+        const projectFile = path.join(process.env.HOME || '~', '.vibekit', 'projects', `${_selectedProjectId}.json`)
+
+        if (!fs.existsSync(projectFile)) return fail('Project file not found.')
+        const project = JSON.parse(fs.readFileSync(projectFile, 'utf-8'))
+        if (!project.settings.envVars) project.settings.envVars = {}
+
+        switch (action) {
+          case 'list': {
+            const vars = project.settings.envVars
+            const keys = Object.keys(vars)
+            if (keys.length === 0) return ok('No environment variables set.\n\nUse project_env with action "set" to add variables.')
+            const lines = keys.map((k: string) => `  ${k}=${vars[k].length > 20 ? vars[k].slice(0, 17) + '...' : vars[k]}`).join('\n')
+            return ok(`Environment Variables (${keys.length}):\n\n${lines}`)
+          }
+          case 'set': {
+            const key = arg<string>(args, 'key')
+            const value = arg<string>(args, 'value')
+            if (!key || value === undefined) return fail('Both key and value are required for set.')
+            project.settings.envVars[key] = value
+            project.updated_at = new Date().toISOString()
+            fs.writeFileSync(projectFile, JSON.stringify(project, null, 2))
+            return ok(`Environment variable set: ${key}=${value.length > 20 ? value.slice(0, 17) + '...' : value}`)
+          }
+          case 'get': {
+            const key = arg<string>(args, 'key')
+            if (!key) return fail('Key is required for get.')
+            const value = project.settings.envVars[key]
+            if (value === undefined) return fail(`Environment variable "${key}" not found.`)
+            return ok(`${key}=${value}`)
+          }
+          case 'remove': {
+            const key = arg<string>(args, 'key')
+            if (!key) return fail('Key is required for remove.')
+            if (!(key in project.settings.envVars)) return fail(`Environment variable "${key}" not found.`)
+            delete project.settings.envVars[key]
+            project.updated_at = new Date().toISOString()
+            fs.writeFileSync(projectFile, JSON.stringify(project, null, 2))
+            return ok(`Environment variable "${key}" removed.`)
+          }
+          default:
+            return fail(`Unknown action: ${action}`, 'Use list, set, get, or remove.')
+        }
+      }
+
+      // ── Notifications ──────────────────────────────────────────────────
+      case 'notification_preferences': {
+        const action = arg<string>(args, 'action') || 'get'
+
+        try {
+          const { notifications } = await import('vibekit')
+
+          if (action === 'get') {
+            const prefs = notifications.getPreferences()
+            return ok(`Notification Preferences:\n\n${JSON.stringify(prefs, null, 2)}`)
+          }
+
+          const newPrefs = arg<any>(args, 'preferences')
+          if (!newPrefs) return fail('Preferences object is required for update.')
+
+          notifications.configure({ preferences: newPrefs })
+          const updated = notifications.getPreferences()
+          return ok(`Notification preferences updated.\n\n${JSON.stringify(updated, null, 2)}`)
+        } catch (e: any) {
+          return fail(`Failed to manage notification preferences: ${e.message}`)
+        }
+      }
+
+      case 'send_test_notification': {
+        const type = arg<string>(args, 'type')
+        const emailAddr = arg<string>(args, 'email')
+        if (!type || !emailAddr) return fail('Both type and email are required.')
+
+        try {
+          const { notifications } = await import('vibekit')
+
+          const testData = {
+            projectName: 'test-project',
+            projectId: _selectedProjectId || 'prj_test123',
+            buildId: 'bld_test_' + Date.now().toString(36),
+            environment: 'production',
+            branch: 'main',
+            commitHash: 'abc1234',
+            triggeredBy: 'Claude Code',
+            duration: '45s',
+            to: emailAddr,
+          }
+
+          let result
+          switch (type) {
+            case 'build-failed':
+              // Temporarily enable to send test
+              const savedPref = notifications.getPreferences().buildFailed
+              notifications.configure({ preferences: { buildFailed: true } })
+              result = await notifications.notifyBuildFailed({
+                ...testData,
+                failedAt: new Date().toISOString(),
+                errorMessage: 'Error: Module not found: vibekit\n  at /app/src/index.ts:1:1\n\nThis is a test notification.',
+              })
+              notifications.configure({ preferences: { buildFailed: savedPref } })
+              break
+            case 'build-succeeded':
+              notifications.configure({ preferences: { buildSucceeded: true } })
+              result = await notifications.notifyBuildSucceeded({
+                ...testData,
+                deployedAt: new Date().toISOString(),
+                deployUrl: 'https://test-project.vibekit.app',
+              })
+              break
+            case 'security-alert':
+              result = await notifications.notifySecurityAlert({
+                to: emailAddr,
+                projectName: 'test-project',
+                projectId: testData.projectId,
+                alertType: 'Suspicious Login Attempt',
+                alertDescription: 'Multiple failed login attempts detected from an unusual IP address. This is a test notification.',
+                severity: 'high',
+                alertTime: new Date().toISOString(),
+                ipAddress: '192.168.1.1',
+              })
+              break
+            case 'usage-warning':
+              result = await notifications.notifyUsageLimitWarning({
+                to: emailAddr,
+                projectName: 'test-project',
+                projectId: testData.projectId,
+                resourceType: 'API Requests',
+                usagePercent: 85,
+                currentUsage: '850,000',
+                planLimit: '1,000,000',
+                planName: 'Pro',
+              })
+              break
+            default:
+              return fail(`Unknown notification type: ${type}`)
+          }
+
+          if (result?.sent) {
+            return ok(`Test notification sent to ${emailAddr}.\nMessage ID: ${result.messageId}`)
+          } else {
+            return fail(`Test notification was not sent: ${result?.reason || 'Unknown reason'}`)
+          }
+        } catch (e: any) {
+          return fail(`Failed to send test notification: ${e.message}`)
+        }
       }
 
       // ── Deploy ───────────────────────────────────────────────────────────

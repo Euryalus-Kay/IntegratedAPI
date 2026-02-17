@@ -14,6 +14,7 @@ export default defineConfig({
     'utils/errors': 'src/utils/errors.ts',
     'testing/index': 'src/testing/index.ts',
     'config/validator': 'src/config/validator.ts',
+    'notifications/index': 'src/notifications/index.ts',
   },
   format: ['esm', 'cjs'],
   dts: true,

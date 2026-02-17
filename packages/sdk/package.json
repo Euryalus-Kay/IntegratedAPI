@@ -61,6 +61,10 @@
     "./config/validator": {
       "import": "./dist/config/validator.js",
       "types": "./dist/config/validator.d.ts"
+    },
+    "./notifications": {
+      "import": "./dist/notifications/index.js",
+      "types": "./dist/notifications/index.d.ts"
     }
   },
   "files": ["dist", "README.md"],

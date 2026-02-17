@@ -1,0 +1,10 @@
+{
+  "name": "@vibekit/dashboard",
+  "version": "0.1.0",
+  "description": "VibeKit management dashboard",
+  "type": "module",
+  "scripts": {
+    "build": "cp -r src dist",
+    "dev": "echo 'Open src/index.html in browser'"
+  }
+}
