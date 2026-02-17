@@ -1,0 +1,23 @@
+{
+  "name": "@vibekit/mcp-server",
+  "version": "0.1.0",
+  "description": "VibeKit MCP server for AI coding agents",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "vibekit-mcp": "./dist/index.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "dev": "tsup src/index.ts --format esm --watch"
+  },
+  "dependencies": {
+    "vibekit": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0"
+  }
+}

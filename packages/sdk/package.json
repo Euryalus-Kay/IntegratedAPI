@@ -1,0 +1,98 @@
+{
+  "name": "vibekit",
+  "version": "0.1.0",
+  "description": "The AI-native backend SDK. Database, auth, storage, email, realtime in one package.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./db": {
+      "import": "./dist/db/index.js",
+      "require": "./dist/db/index.cjs",
+      "types": "./dist/db/index.d.ts"
+    },
+    "./auth": {
+      "import": "./dist/auth/index.js",
+      "require": "./dist/auth/index.cjs",
+      "types": "./dist/auth/index.d.ts"
+    },
+    "./auth/components": {
+      "import": "./dist/auth/components/index.js",
+      "types": "./dist/auth/components/index.d.ts"
+    },
+    "./auth/middleware": {
+      "import": "./dist/auth/middleware.js",
+      "types": "./dist/auth/middleware.d.ts"
+    },
+    "./storage": {
+      "import": "./dist/storage/index.js",
+      "require": "./dist/storage/index.cjs",
+      "types": "./dist/storage/index.d.ts"
+    },
+    "./email": {
+      "import": "./dist/email/index.js",
+      "require": "./dist/email/index.cjs",
+      "types": "./dist/email/index.d.ts"
+    },
+    "./realtime": {
+      "import": "./dist/realtime/index.js",
+      "require": "./dist/realtime/index.cjs",
+      "types": "./dist/realtime/index.d.ts"
+    },
+    "./realtime/client": {
+      "import": "./dist/realtime/client.js",
+      "types": "./dist/realtime/client.d.ts"
+    },
+    "./errors": {
+      "import": "./dist/utils/errors.js",
+      "require": "./dist/utils/errors.cjs",
+      "types": "./dist/utils/errors.d.ts"
+    },
+    "./testing": {
+      "import": "./dist/testing/index.js",
+      "types": "./dist/testing/index.d.ts"
+    },
+    "./config/validator": {
+      "import": "./dist/config/validator.js",
+      "types": "./dist/config/validator.d.ts"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "bcryptjs": "^2.4.3",
+    "jose": "^5.2.0",
+    "ws": "^8.16.0",
+    "zod": "^3.22.0",
+    "hono": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
+    "@types/bcryptjs": "^2.4.0",
+    "@types/ws": "^8.5.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  },
+  "peerDependencies": {
+    "@neondatabase/serverless": ">=0.9.0"
+  },
+  "peerDependenciesMeta": {
+    "@neondatabase/serverless": { "optional": true }
+  }
+}

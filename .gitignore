@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.vibekit/
+*.db
+*.db-journal
+.env
+.env.local
+.env.production
+coverage/
+.turbo/
