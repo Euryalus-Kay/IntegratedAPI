@@ -53,6 +53,14 @@
       "import": "./dist/utils/errors.js",
       "require": "./dist/utils/errors.cjs",
       "types": "./dist/utils/errors.d.ts"
+    },
+    "./testing": {
+      "import": "./dist/testing/index.js",
+      "types": "./dist/testing/index.d.ts"
+    },
+    "./config/validator": {
+      "import": "./dist/config/validator.js",
+      "types": "./dist/config/validator.d.ts"
     }
   },
   "files": ["dist", "README.md"],

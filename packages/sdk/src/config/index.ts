@@ -1,4 +1,5 @@
-import { resolveConfig, findConfig, detectEnv } from './detector.js'
+import { resolveConfig, findConfig, detectEnv, writeConfig, migrateConfig } from './detector.js'
+import { validateConfig, formatValidationErrors } from './validator.js'
 import type { VibeKitConfig, ResolvedConfig, VibeKitEnv } from './types.js'
 
 let _config: ResolvedConfig | null = null
@@ -27,5 +28,10 @@ export function isProduction(): boolean {
   return getConfig().env === 'production'
 }
 
-export { resolveConfig, findConfig, detectEnv }
+export function isPreview(): boolean {
+  return getConfig().env === 'preview'
+}
+
+export { resolveConfig, findConfig, detectEnv, writeConfig, migrateConfig }
+export { validateConfig, formatValidationErrors }
 export type { VibeKitConfig, ResolvedConfig, VibeKitEnv }

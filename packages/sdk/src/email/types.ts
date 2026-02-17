@@ -7,7 +7,11 @@ export interface SendEmailOptions {
   data?: Record<string, unknown>
   from?: string
   replyTo?: string
+  cc?: string | string[]
+  bcc?: string | string[]
   attachments?: EmailAttachment[]
+  tags?: string[]
+  metadata?: Record<string, string>
 }
 
 export interface EmailAttachment {
@@ -23,5 +27,26 @@ export interface EmailTemplate {
 }
 
 export interface EmailTransport {
-  send(options: SendEmailOptions): Promise<{ messageId: string }>
+  send(options: SendEmailOptions): Promise<EmailSendResult>
+}
+
+export interface EmailSendResult {
+  messageId: string
+  accepted: string[]
+  rejected: string[]
+}
+
+export interface EmailLog {
+  messageId: string
+  to: string[]
+  subject: string
+  template?: string
+  sentAt: string
+  status: 'sent' | 'failed'
+  error?: string
+}
+
+export interface EmailValidationResult {
+  valid: boolean
+  errors: string[]
 }
