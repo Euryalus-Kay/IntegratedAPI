@@ -7,7 +7,7 @@ export { realtime } from './realtime/index.js'
 export { notifications } from './notifications/index.js'
 
 // New modules (v0.2)
-export { observability, logger, metrics, tracing, alerts, health } from './observability/index.js'
+export { observability, logger, metrics, tracing, alerts, health, createLogDrainManager } from './observability/index.js'
 export { createVault, createDefaultVault } from './secrets/index.js'
 export { createEnvironments } from './environments/index.js'
 export { createDeployManager } from './deploy/index.js'
@@ -16,6 +16,14 @@ export { webhooks } from './webhooks/index.js'
 // Advanced auth (re-exported from auth/index)
 export { oauth, magicLinks, phone, mfa, organizations, permissions, passwords, restrictions, waitlist } from './auth/index.js'
 
+// Auth v2 (re-exported from auth/index)
+export { anonymous, sso, passkeys, captcha } from './auth/index.js'
+
+// New modules (v0.3) - Functions, Flags, Analytics
+export { createFunctionRuntime } from './functions/index.js'
+export { createFlagManager } from './flags/index.js'
+export { createAnalytics } from './analytics/index.js'
+
 // Advanced DB (re-exported from db/index)
 export {
   createRLSManager, createRLSManagerWithTracking,
@@ -23,7 +31,21 @@ export {
   createSearchManager, createVectorManager,
   createCronManager, createQueueManager,
   createWebhookManager, createBranchManager,
+  createMigrationManager, createConnectionPool,
+  createBackupManager, createReplicaManager,
+  createTypeGenerator,
 } from './db/index.js'
+
+// Realtime v2 (re-exported from realtime/index)
+export { broadcast, presenceV2, cdc } from './realtime/index.js'
+
+// Email v2 (re-exported from email/index)
+export { createDomainManager, suppression, emailAnalytics } from './email/index.js'
+
+// Storage v2 (re-exported from storage/index)
+export { createResumableUploadManager } from './storage/index.js'
+export { createImageTransformer } from './storage/index.js'
+export { createCdnManager } from './storage/index.js'
 
 // Config
 export { getConfig, setConfig, resetConfig, isLocal, isProduction } from './config/index.js'
@@ -142,6 +164,47 @@ export type {
   ImpersonationSession, ImpersonationCheck,
 } from './auth/types.js'
 
+// Re-export types: Auth v2
+export type {
+  AnonymousSignInOptions, AnonymousConvertResult,
+} from './auth/index.js'
+export type {
+  SSOProviderType, SSOProviderConfig, SSOAttributeMapping, SSOProvider,
+  SSOInitiateOptions, SSOInitiateResult, SAMLResponse, SAMLAssertion,
+  SSOCallbackResult, SAMLValidationResult,
+} from './auth/index.js'
+export type {
+  PasskeyChallenge, PasskeyRegistrationChallenge, PasskeyCredential,
+  StoredPasskey, PasskeyLoginResult,
+} from './auth/index.js'
+export type {
+  CaptchaProvider, CaptchaConfig, CaptchaProviderInfo, CaptchaVerifyResult,
+} from './auth/index.js'
+
+// Re-export types: Realtime v2
+export type {
+  BroadcastCallback, ChannelAuthCallback, BroadcastEvent, BroadcastSubscriber,
+} from './realtime/index.js'
+export type {
+  PresenceUser, PresenceJoinCallback, PresenceLeaveCallback, PresenceSyncCallback,
+} from './realtime/index.js'
+export type {
+  CDCEventType, CDCChange, CDCCallback, CDCFilterOptions, CDCSubscription,
+} from './realtime/index.js'
+
+// Re-export types: Email v2
+export type {
+  DomainStatus, DnsRecordType, DnsRecord, EmailDomain, DomainManagerConfig,
+} from './email/index.js'
+export type {
+  SuppressionReason, SuppressedEmail, SuppressionListOptions, SuppressionListResult,
+  BounceEvent, ComplaintEvent,
+} from './email/index.js'
+export type {
+  EmailEventType, EmailEvent, EmailAnalyticsSummary, TopLink, DomainStats,
+  AnalyticsSummaryOptions, TopLinksOptions,
+} from './email/index.js'
+
 // Re-export types: Observability
 export type {
   StructuredLog, MetricEntry, TraceSpan, AlertRule, AlertEvent, HealthCheck, HealthReport,
@@ -161,3 +224,71 @@ export type {
 
 // Re-export types: Webhooks
 export type { WebhookEndpoint, WebhookVerifyResult } from './webhooks/index.js'
+
+// Re-export types: Log Drains
+export type {
+  LogDrainType, LogDrainStatus, LogDrainConfig, LogDrainFilter,
+  LogDrain, LogDrainStats, DrainLogEntry,
+} from './observability/index.js'
+
+// Re-export types: Functions
+export type {
+  FunctionRequest, FunctionResponse, FunctionContext, FunctionHandler,
+  FunctionMiddleware, FunctionOptions, CorsConfig, RateLimitConfig,
+  RegisteredFunction, FunctionInvocationLog, FunctionMetrics,
+  FunctionSchedule, FunctionRuntimeConfig, FunctionRuntime,
+} from './functions/types.js'
+
+// Re-export types: Feature Flags
+export type {
+  FlagType, FlagValue, FlagTargetingRule, FlagConfig, FlagCreateOptions,
+  FlagUpdateOptions, EvaluationContext, EvaluationResult,
+  FlagEvaluationMetrics, ExperimentVariant, ExperimentConfig,
+  ExperimentCreateOptions, ExperimentAssignment, ExperimentResults,
+  FlagDbAdapter, FlagManagerConfig, FlagManager,
+} from './flags/types.js'
+
+// Re-export types: Analytics
+export type {
+  AnalyticsEvent, PageViewEvent, WebVitalEntry, TrackOptions,
+  PageViewOptions, WebVitalsInput, IdentifyTraits, TimeRange,
+  TimeFilter, EventQueryOptions, PageViewQueryOptions,
+  TopPagesOptions, TopReferrersOptions, UniqueVisitorsOptions,
+  WebVitalsQueryOptions, SessionQueryOptions, TopPageResult,
+  TopReferrerResult, UniqueVisitorResult, WebVitalsSummary,
+  SessionData, FunnelStep, FunnelResult, ExportOptions,
+  AnalyticsDbAdapter, AnalyticsConfig, AnalyticsManager,
+} from './analytics/types.js'
+
+// Re-export types: DB Enhanced
+export type {
+  MigrationManager, MigrationFile, MigrationRecord, MigrationStatusEntry, SchemaDiff,
+} from './db/migrations.js'
+export type {
+  ConnectionPoolManager, PoolConfig, PoolConnection, PoolStats,
+} from './db/pool.js'
+export type {
+  BackupManager, BackupConfig, BackupInfo, WalStatus, ScheduleHandle,
+} from './db/backups.js'
+export type {
+  ReplicaManager, ReplicaConfig, ReplicaInfo,
+} from './db/replicas.js'
+export type {
+  TypeGenerator, ColumnInfo, TableSchema, WatchHandle,
+} from './db/typegen.js'
+
+// Re-export types: Storage v2
+export type {
+  ResumableUploadConfig, CreateUploadOptions, ResumableUploadState,
+  ResumableUploadStatus, UploadStatusResult, UploadChunkResult,
+  CompleteUploadResult, ListUploadsOptions, ResumeUploadInfo,
+} from './storage/resumable.js'
+export type {
+  ImageTransformerConfig, TransformOptions, ImageResizeMode, ImageOutputFormat,
+  WatermarkPosition, ImageInfo, TransformResult, TransformUrlResult, BatchResult,
+  SharpPlugin, SharpPipeline,
+} from './storage/transforms.js'
+export type {
+  CdnConfig, CachePolicy, CacheHeaders, CdnStats,
+  CustomDomain, PurgeResult, WarmCacheResult,
+} from './storage/cdn.js'

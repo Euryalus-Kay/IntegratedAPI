@@ -468,3 +468,10 @@ export const observability = {
   alerts,
   health,
 }
+
+// Log Drains
+export { createLogDrainManager } from './drains.js'
+export type {
+  LogDrainType, LogDrainStatus, LogDrainConfig, LogDrainFilter,
+  LogDrain, LogDrainStats, LogEntry as DrainLogEntry,
+} from './drains.js'

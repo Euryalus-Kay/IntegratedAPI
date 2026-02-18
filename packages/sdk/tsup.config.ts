@@ -38,6 +38,15 @@ export default defineConfig({
     // Webhooks
     'webhooks/index': 'src/webhooks/index.ts',
 
+    // Functions (Edge/Serverless)
+    'functions/index': 'src/functions/index.ts',
+
+    // Feature Flags
+    'flags/index': 'src/flags/index.ts',
+
+    // Analytics
+    'analytics/index': 'src/analytics/index.ts',
+
     // Utils
     'utils/errors': 'src/utils/errors.ts',
     'testing/index': 'src/testing/index.ts',

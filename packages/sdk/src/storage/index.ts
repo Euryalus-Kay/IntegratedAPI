@@ -58,3 +58,26 @@ export type {
   SignedUrlOptions, ImageTransformOptions,
   ListObjectsOptions, ListObjectsResult,
 } from './buckets.js'
+
+// Resumable uploads (TUS protocol)
+export { createResumableUploadManager } from './resumable.js'
+export type {
+  ResumableUploadConfig, CreateUploadOptions, ResumableUploadState,
+  ResumableUploadStatus, UploadStatusResult, UploadChunkResult,
+  CompleteUploadResult, ListUploadsOptions, ResumeUploadInfo,
+} from './resumable.js'
+
+// Image transformation pipeline
+export { createImageTransformer } from './transforms.js'
+export type {
+  ImageTransformerConfig, TransformOptions, ImageResizeMode, ImageOutputFormat,
+  WatermarkPosition, ImageInfo, TransformResult, TransformUrlResult, BatchResult,
+  SharpPlugin, SharpPipeline,
+} from './transforms.js'
+
+// CDN / Edge caching
+export { createCdnManager } from './cdn.js'
+export type {
+  CdnConfig, CachePolicy, CacheHeaders, CdnStats,
+  CustomDomain, PurgeResult, WarmCacheResult,
+} from './cdn.js'

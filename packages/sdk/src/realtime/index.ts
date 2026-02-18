@@ -40,3 +40,19 @@ export const realtime = {
 export { RealtimeServer }
 export { createRealtimeClient } from './client.js'
 export type { RealtimeMessage, PresenceState, ChannelInfo, MessageHandler, PresenceHandler } from './types.js'
+
+// Realtime v2 modules
+export { broadcast } from './broadcast.js'
+export type {
+  BroadcastCallback, ChannelAuthCallback, BroadcastEvent, BroadcastSubscriber,
+} from './broadcast.js'
+
+export { presence as presenceV2 } from './presence.js'
+export type {
+  PresenceUser, PresenceJoinCallback, PresenceLeaveCallback, PresenceSyncCallback,
+} from './presence.js'
+
+export { cdc } from './cdc.js'
+export type {
+  CDCEventType, CDCChange, CDCCallback, CDCFilterOptions, CDCSubscription,
+} from './cdc.js'

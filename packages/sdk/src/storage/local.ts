@@ -57,6 +57,7 @@ export function createLocalStorageAdapter(): StorageAdapter {
         contentType: options.contentType || 'application/octet-stream',
         size: data.length,
         folder,
+        bucket: options.bucket || 'default',
         public: options.public !== false,
         metadata: options.metadata || {},
         createdAt: new Date().toISOString(),

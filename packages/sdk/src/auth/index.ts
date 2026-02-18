@@ -30,3 +30,25 @@ export { passwords } from './passwords.js'
 export { restrictions } from './restrictions.js'
 export { waitlist } from './waitlist.js'
 export { createSession, validateSession, revokeSession, revokeAllSessions, getActiveSessions, cleanExpiredSessions } from './session.js'
+
+// Auth v2 modules
+export { anonymous } from './anonymous.js'
+export type { AnonymousSignInOptions, AnonymousConvertResult } from './anonymous.js'
+
+export { sso } from './sso.js'
+export type {
+  SSOProviderType, SSOProviderConfig, SSOAttributeMapping, SSOProvider,
+  SSOInitiateOptions, SSOInitiateResult, SAMLResponse, SAMLAssertion,
+  SSOCallbackResult, SAMLValidationResult,
+} from './sso.js'
+
+export { passkeys } from './passkeys.js'
+export type {
+  PasskeyChallenge, PasskeyRegistrationChallenge, PasskeyCredential,
+  StoredPasskey, PasskeyLoginResult,
+} from './passkeys.js'
+
+export { captcha } from './captcha.js'
+export type {
+  CaptchaProvider, CaptchaConfig, CaptchaProviderInfo, CaptchaVerifyResult,
+} from './captcha.js'

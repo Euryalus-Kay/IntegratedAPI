@@ -211,3 +211,21 @@ export type { BatchSendOptions, BatchSendResult } from './batch.js'
 
 export { createAudienceManager } from './audiences.js'
 export type { Audience, Contact, ContactListOptions, ContactListResult } from './audiences.js'
+
+// Email v2 modules
+export { createDomainManager } from './domains.js'
+export type {
+  DomainStatus, DnsRecordType, DnsRecord, EmailDomain, DomainManagerConfig,
+} from './domains.js'
+
+export { suppression } from './suppression.js'
+export type {
+  SuppressionReason, SuppressedEmail, SuppressionListOptions, SuppressionListResult,
+  BounceEvent, ComplaintEvent,
+} from './suppression.js'
+
+export { emailAnalytics } from './analytics.js'
+export type {
+  EmailEventType, EmailEvent, EmailAnalyticsSummary, TopLink, DomainStats,
+  AnalyticsSummaryOptions, TopLinksOptions,
+} from './analytics.js'
