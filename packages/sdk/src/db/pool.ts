@@ -9,6 +9,9 @@
  */
 
 import type { DatabaseAdapter, QueryResult, ExecuteResult, TransactionClient } from './types.js'
+import { createLogger } from '../utils/logger.js'
+
+const log = createLogger('vibekit:pool')
 
 // ---------------------------------------------------------------------------
 // Types
@@ -316,7 +319,7 @@ export function createConnectionPool(config: Partial<PoolConfig> & { adapter?: D
 
       while (connections.some(c => c.status === 'active')) {
         if (Date.now() - drainStart > drainTimeout) {
-          console.warn('[vibekit:pool] Drain timeout reached; forcibly closing remaining connections')
+          log.warn('Drain timeout reached; forcibly closing remaining connections')
           break
         }
         await new Promise(resolve => setTimeout(resolve, 100))
@@ -335,7 +338,7 @@ export function createConnectionPool(config: Partial<PoolConfig> & { adapter?: D
       }
       connections.length = 0
 
-      console.log('[vibekit:pool] Pool drained')
+      log.info('Pool drained')
     },
 
     resize(newMax: number): void {
@@ -344,7 +347,7 @@ export function createConnectionPool(config: Partial<PoolConfig> & { adapter?: D
       }
       const oldMax = max
       max = newMax
-      console.log(`[vibekit:pool] Pool resized from ${oldMax} to ${newMax}`)
+      log.info(`Pool resized from ${oldMax} to ${newMax}`)
 
       // If shrinking, remove excess idle connections
       if (newMax < oldMax) {
@@ -401,7 +404,7 @@ export function createConnectionPool(config: Partial<PoolConfig> & { adapter?: D
           connections.push(conn)
           scheduleIdleTimeout(conn)
         }).catch(err => {
-          console.warn(`[vibekit:pool] Failed to pre-create connection: ${err instanceof Error ? err.message : String(err)}`)
+          log.warn(`Failed to pre-create connection: ${err instanceof Error ? err.message : String(err)}`)
         })
       )
     }

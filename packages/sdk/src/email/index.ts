@@ -2,6 +2,75 @@ import { getConfig, isLocal } from '../config/index.js'
 import { getTemplate, hasTemplate, listTemplates, registerTemplate, removeTemplate, renderTemplate, previewTemplate, validateTemplateData } from './templates.js'
 import type { SendEmailOptions, EmailTemplate, EmailLog, EmailSendResult } from './types.js'
 import { VibeKitError } from '../utils/errors.js'
+import { createLogger } from '../utils/logger.js'
+import type { EmailProvider } from './providers.js'
+import {
+  createConsoleProvider,
+  createSmtpProvider,
+  createResendProvider,
+  createSendGridProvider,
+  createMailgunProvider,
+} from './providers.js'
+
+const log = createLogger('vibekit:email')
+
+function resolveProductionProvider(): EmailProvider {
+  const config = getConfig()
+  const emailConfig = typeof config.modules.email === 'object' ? config.modules.email : null
+
+  // 1. Resend
+  const resendApiKey = process.env.RESEND_API_KEY
+  if (resendApiKey) {
+    log.info('Using Resend email provider')
+    return createResendProvider(resendApiKey)
+  }
+
+  // 2. SMTP
+  const smtpHost = process.env.SMTP_HOST
+  if (smtpHost) {
+    log.info('Using SMTP email provider', { host: smtpHost })
+    return createSmtpProvider({
+      host: smtpHost,
+      port: parseInt(process.env.SMTP_PORT || '587', 10),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER || '',
+        pass: process.env.SMTP_PASS || '',
+      },
+    })
+  }
+
+  // 3. SendGrid
+  const sendgridApiKey = process.env.SENDGRID_API_KEY
+  if (sendgridApiKey) {
+    log.info('Using SendGrid email provider')
+    return createSendGridProvider(sendgridApiKey)
+  }
+
+  // 4. Mailgun
+  const mailgunApiKey = process.env.MAILGUN_API_KEY
+  if (mailgunApiKey) {
+    const mailgunDomain = process.env.MAILGUN_DOMAIN || ''
+    log.info('Using Mailgun email provider', { domain: mailgunDomain })
+    return createMailgunProvider(mailgunApiKey, mailgunDomain)
+  }
+
+  // 5. Fallback: console provider with warning
+  log.warn(
+    'No email provider configured. Falling back to console provider. ' +
+    'Set RESEND_API_KEY, SMTP_HOST, SENDGRID_API_KEY, or MAILGUN_API_KEY to enable production email delivery.'
+  )
+  return createConsoleProvider()
+}
+
+let _productionProvider: EmailProvider | null = null
+
+function getProductionProvider(): EmailProvider {
+  if (!_productionProvider) {
+    _productionProvider = resolveProductionProvider()
+  }
+  return _productionProvider
+}
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -91,7 +160,7 @@ export const email = {
     }
 
     const to = Array.isArray(options.to) ? options.to : [options.to]
-    const messageId = `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    let messageId = `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
     try {
       if (isLocal()) {
@@ -115,11 +184,26 @@ export const email = {
         }
         console.log(`  ╚${border}╝\n`)
       } else {
-        throw new VibeKitError(
-          'Production email not yet implemented. Use vibekit dev for local development.',
-          'NOT_IMPLEMENTED',
-          501
-        )
+        const config = getConfig()
+        const emailConfig = typeof config.modules.email === 'object' ? config.modules.email : null
+        const from = options.from || emailConfig?.from || process.env.EMAIL_FROM || 'noreply@example.com'
+
+        const provider = getProductionProvider()
+        const providerTags = options.tags
+          ? options.tags.map(t => ({ name: t, value: 'true' }))
+          : undefined
+        const result = await provider.send({
+          from,
+          to: options.to,
+          subject,
+          html: html || undefined,
+          text: text || undefined,
+          replyTo: options.replyTo || emailConfig?.replyTo,
+          tags: providerTags,
+        })
+
+        // Use the provider's message ID if available
+        messageId = result.id || messageId
       }
 
       addToLog({

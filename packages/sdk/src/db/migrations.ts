@@ -9,6 +9,9 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import type { DatabaseAdapter, SeedContext, QueryResult, ExecuteResult } from './types.js'
+import { createLogger } from '../utils/logger.js'
+
+const log = createLogger('vibekit:migrations')
 
 // ---------------------------------------------------------------------------
 // Types
@@ -290,7 +293,7 @@ function buildSeedContext(adapter: DatabaseAdapter): SeedContext {
       return adapter.query<T>(sql, params)
     },
     log(message: string): void {
-      console.log(`[vibekit:seed] ${message}`)
+      log.info(`[seed] ${message}`)
     },
   }
 }
@@ -328,7 +331,7 @@ export function createMigrationManager(
       const template = generateMigrationTemplate(name)
       fs.writeFileSync(filepath, template, 'utf-8')
 
-      console.log(`[vibekit:migrations] Generated: ${filename}`)
+      log.info(`Generated: ${filename}`)
       return filepath
     },
 
@@ -340,7 +343,7 @@ export function createMigrationManager(
       const pending = files.filter(f => !appliedVersions.has(f.version))
 
       if (pending.length === 0) {
-        console.log('[vibekit:migrations] No pending migrations')
+        log.info('No pending migrations')
         return null
       }
 
@@ -357,7 +360,7 @@ export function createMigrationManager(
         )
       })
 
-      console.log(`[vibekit:migrations] Applied: ${next.version}_${next.name}`)
+      log.info(`Applied: ${next.version}_${next.name}`)
       return {
         version: next.version,
         name: next.name,
@@ -375,9 +378,9 @@ export function createMigrationManager(
         result = await manager.up()
       }
       if (results.length === 0) {
-        console.log('[vibekit:migrations] All migrations are up to date')
+        log.info('All migrations are up to date')
       } else {
-        console.log(`[vibekit:migrations] Applied ${results.length} migration(s)`)
+        log.info(`Applied ${results.length} migration(s)`)
       }
       return results
     },
@@ -387,7 +390,7 @@ export function createMigrationManager(
       const applied = await getAppliedMigrations(adapter)
 
       if (applied.length === 0) {
-        console.log('[vibekit:migrations] No migrations to roll back')
+        log.info('No migrations to roll back')
         return null
       }
 
@@ -412,7 +415,7 @@ export function createMigrationManager(
         )
       }
 
-      console.log(`[vibekit:migrations] Rolled back: ${last.version}_${last.name}`)
+      log.info(`Rolled back: ${last.version}_${last.name}`)
       return {
         version: last.version,
         name: last.name,
@@ -430,7 +433,7 @@ export function createMigrationManager(
       const toRollback = applied.filter(m => m.version > version).reverse()
 
       if (toRollback.length === 0) {
-        console.log(`[vibekit:migrations] No migrations to roll back (already at or before ${version})`)
+        log.info(`No migrations to roll back (already at or before ${version})`)
         return results
       }
 
@@ -441,7 +444,7 @@ export function createMigrationManager(
         }
       }
 
-      console.log(`[vibekit:migrations] Rolled back ${results.length} migration(s) to version ${version}`)
+      log.info(`Rolled back ${results.length} migration(s) to version ${version}`)
       return results
     },
 
@@ -491,7 +494,7 @@ export function createMigrationManager(
 
       // Now apply all migrations
       await manager.upAll()
-      console.log('[vibekit:migrations] Database reset complete')
+      log.info('Database reset complete')
     },
 
     async diff(): Promise<SchemaDiff> {
@@ -572,9 +575,9 @@ export function createMigrationManager(
     async seed(seedFn: (ctx: SeedContext) => Promise<void>): Promise<void> {
       await ensureInit()
       const ctx = buildSeedContext(adapter)
-      console.log('[vibekit:migrations] Running seed function...')
+      log.info('Running seed function...')
       await seedFn(ctx)
-      console.log('[vibekit:migrations] Seed complete')
+      log.info('Seed complete')
     },
 
     async squash(): Promise<string> {
@@ -582,7 +585,7 @@ export function createMigrationManager(
       const files = discoverMigrationFiles(resolvedDir)
 
       if (files.length <= 1) {
-        console.log('[vibekit:migrations] Nothing to squash (0 or 1 migration)')
+        log.info('Nothing to squash (0 or 1 migration)')
         return ''
       }
 
@@ -651,7 +654,7 @@ ${downStatements.join('\n')}
         [timestamp, squashedName, checksum]
       )
 
-      console.log(`[vibekit:migrations] Squashed ${files.length} migrations into ${filename}`)
+      log.info(`Squashed ${files.length} migrations into ${filename}`)
       return filepath
     },
 
@@ -666,11 +669,11 @@ ${downStatements.join('\n')}
         const lockedAt = new Date(row.locked_at).getTime()
         const staleThreshold = 10 * 60 * 1000
         if (Date.now() - lockedAt < staleThreshold) {
-          console.warn('[vibekit:migrations] Migrations are locked by another process')
+          log.warn('Migrations are locked by another process')
           return false
         }
         // Lock is stale, allow override
-        console.warn('[vibekit:migrations] Overriding stale migration lock')
+        log.warn('Overriding stale migration lock')
       }
 
       await adapter.execute(
@@ -685,7 +688,7 @@ ${downStatements.join('\n')}
       await adapter.execute(
         `UPDATE "${LOCK_TABLE}" SET locked_at = NULL, locked_by = NULL WHERE id = 1`
       )
-      console.log('[vibekit:migrations] Migration lock released')
+      log.info('Migration lock released')
     },
   }
 

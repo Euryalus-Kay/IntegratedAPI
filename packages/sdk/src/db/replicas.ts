@@ -16,6 +16,9 @@ import type {
   ExecuteResult,
   TransactionClient,
 } from './types.js'
+import { createLogger } from '../utils/logger.js'
+
+const log = createLogger('vibekit:replicas')
 
 // ---------------------------------------------------------------------------
 // Types
@@ -163,7 +166,7 @@ function syncSqliteReplica(primaryDbPath: string, replicaDbPath: string): void {
       fs.unlinkSync(replicaShmPath)
     }
   } catch (err) {
-    console.warn(`[vibekit:replicas] Sync failed: ${err instanceof Error ? err.message : String(err)}`)
+    log.warn(`Sync failed: ${err instanceof Error ? err.message : String(err)}`)
   }
 }
 
@@ -258,7 +261,7 @@ export function createReplicaManager(
       }
 
       replicas.set(name, entry)
-      console.log(`[vibekit:replicas] Added replica: ${name}`)
+      log.info(`Added replica: ${name}`)
     },
 
     async removeReplica(name: string): Promise<void> {
@@ -295,7 +298,7 @@ export function createReplicaManager(
       }
 
       replicas.delete(name)
-      console.log(`[vibekit:replicas] Removed replica: ${name}`)
+      log.info(`Removed replica: ${name}`)
     },
 
     listReplicas(): ReplicaInfo[] {
@@ -400,13 +403,11 @@ export function createReplicaManager(
         if (fs.existsSync(walPath)) fs.copyFileSync(walPath, primaryDbPath + '-wal')
         if (fs.existsSync(shmPath)) fs.copyFileSync(shmPath, primaryDbPath + '-shm')
 
-        console.log(`[vibekit:replicas] Promoted replica "${name}" to primary (SQLite file copy)`)
+        log.info(`Promoted replica "${name}" to primary (SQLite file copy)`)
       } else {
         // For Postgres: this is a manual operation; we just note it
-        console.log(
-          `[vibekit:replicas] Replica "${name}" marked for promotion. ` +
-          `Actual Postgres promotion must be done at the infrastructure level ` +
-          `(e.g., pg_ctl promote, or via your cloud provider).`
+        log.info(
+          `Replica "${name}" marked for promotion. Actual Postgres promotion must be done at the infrastructure level (e.g., pg_ctl promote, or via your cloud provider).`
         )
       }
 

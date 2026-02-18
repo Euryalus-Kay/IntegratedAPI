@@ -9,6 +9,9 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import type { DatabaseAdapter } from './types.js'
+import { createLogger } from '../utils/logger.js'
+
+const log = createLogger('vibekit:typegen')
 
 // ---------------------------------------------------------------------------
 // Types
@@ -440,10 +443,10 @@ export function createTypeGenerator(adapter: DatabaseAdapter): TypeGenerator {
               fs.mkdirSync(dir, { recursive: true })
             }
             fs.writeFileSync(outputPath, content, 'utf-8')
-            console.log(`[vibekit:typegen] Types updated: ${outputPath}`)
+            log.info(`Types updated: ${outputPath}`)
           }
         } catch (err) {
-          console.error(`[vibekit:typegen] Watch error: ${err instanceof Error ? err.message : String(err)}`)
+          log.error(`Watch error: ${err instanceof Error ? err.message : String(err)}`)
         }
       }
 
@@ -459,7 +462,7 @@ export function createTypeGenerator(adapter: DatabaseAdapter): TypeGenerator {
             clearInterval(timer)
             timer = null
           }
-          console.log('[vibekit:typegen] Watcher stopped')
+          log.info('Watcher stopped')
         },
         isRunning(): boolean {
           return running
@@ -476,7 +479,7 @@ export function createTypeGenerator(adapter: DatabaseAdapter): TypeGenerator {
         fs.mkdirSync(dir, { recursive: true })
       }
       fs.writeFileSync(outputPath, content, 'utf-8')
-      console.log(`[vibekit:typegen] Types written to: ${outputPath}`)
+      log.info(`Types written to: ${outputPath}`)
     },
   }
 

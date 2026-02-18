@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VibeKit Documentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#000;--bg2:#0A0A0A;--bg3:#111;--border:#1A1A1A;--border2:#252525;--text:#EDEDED;--text2:#888;--text3:#555;--accent:#00A3FF;--accent2:#0090E0;--code-bg:#0D1117;--code-border:#1E2733;--green:#10B981;--yellow:#F59E0B;--red:#EF4444;--purple:#8B5CF6;--sidebar-w:260px;--nav-h:60px;--font:'Outfit',sans-serif;--mono:'JetBrains Mono',monospace}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+
+/* Top Nav */
+.topnav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);background:rgba(0,0,0,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);z-index:100;display:flex;align-items:center;padding:0 24px}
+.topnav-brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px;color:var(--text)}
+.topnav-brand .dot{width:8px;height:8px;background:var(--accent);border-radius:2px;transform:rotate(45deg)}
+.topnav-links{margin-left:auto;display:flex;gap:20px;align-items:center}
+.topnav-links a{color:var(--text2);font-size:14px;font-weight:400;transition:color .2s}
+.topnav-links a:hover{color:var(--text);text-decoration:none}
+.topnav .search-box{margin-left:24px;position:relative}
+.topnav .search-box input{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 14px 7px 34px;color:var(--text);font-size:13px;width:200px;outline:none;font-family:var(--font);transition:border-color .2s}
+.topnav .search-box input:focus{border-color:var(--accent)}
+.topnav .search-box svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3)}
+.mobile-toggle{display:none;background:none;border:none;color:var(--text);cursor:pointer;padding:8px}
+
+/* Sidebar */
+.sidebar{position:fixed;top:var(--nav-h);left:0;bottom:0;width:var(--sidebar-w);background:var(--bg);border-right:1px solid var(--border);overflow-y:auto;padding:20px 0;z-index:50;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.sidebar::-webkit-scrollbar{width:4px}.sidebar::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.sidebar-section{padding:0 16px;margin-bottom:8px}
+.sidebar-section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--text3);padding:12px 8px 6px;user-select:none}
+.sidebar-link{display:block;padding:5px 8px;font-size:13px;color:var(--text2);border-radius:6px;transition:all .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-link:hover{color:var(--text);background:var(--bg3);text-decoration:none}
+.sidebar-link.active{color:var(--accent);background:rgba(0,163,255,0.08)}
+.sidebar-link.sub{padding-left:20px;font-size:12px}
+
+/* Main Content */
+.main{margin-left:var(--sidebar-w);padding:calc(var(--nav-h) + 32px) 48px 80px;max-width:880px}
+.main h1{font-size:36px;font-weight:700;margin-bottom:12px;letter-spacing:-0.5px}
+.main h2{font-size:26px;font-weight:600;margin:48px 0 16px;padding-top:20px;border-top:1px solid var(--border);letter-spacing:-0.3px}
+.main h2:first-of-type{border-top:none;margin-top:32px}
+.main h3{font-size:19px;font-weight:600;margin:32px 0 12px;color:var(--text)}
+.main h4{font-size:15px;font-weight:600;margin:24px 0 8px;color:var(--text2)}
+.main p{margin-bottom:16px;color:var(--text2);font-size:15px}
+.main ul,.main ol{margin:0 0 16px 20px;color:var(--text2);font-size:15px}
+.main li{margin-bottom:6px}
+.main strong{color:var(--text)}
+.main code{font-family:var(--mono);font-size:13px;background:var(--code-bg);border:1px solid var(--code-border);padding:2px 6px;border-radius:4px;color:#E6DB74}
+.main table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
+.main th{text-align:left;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-weight:600;font-size:13px}
+.main td{padding:10px 12px;border:1px solid var(--border);color:var(--text2)}
+
+/* Code Blocks */
+pre{background:var(--code-bg);border:1px solid var(--code-border);border-radius:10px;padding:20px;margin:16px 0;overflow-x:auto;position:relative;font-size:13px;line-height:1.6}
+pre code{background:none;border:none;padding:0;color:#E6DB74;font-family:var(--mono)}
+pre .copy-btn{position:absolute;top:10px;right:10px;background:var(--border2);border:none;color:var(--text2);padding:4px 10px;border-radius:5px;font-size:11px;cursor:pointer;font-family:var(--font);opacity:0;transition:opacity .2s}
+pre:hover .copy-btn{opacity:1}
+pre .copy-btn:hover{background:var(--accent);color:#fff}
+.kw{color:#FF6188}.fn{color:#A9DC76}.str{color:#FFD866}.cm{color:#727072}.num{color:#AB9DF2}.tp{color:#78DCE8}.op{color:#FF6188}.br{color:#888}
+
+/* Callouts */
+.callout{padding:16px 20px;border-radius:8px;margin:16px 0;font-size:14px;border-left:3px solid}
+.callout.info{background:rgba(0,163,255,0.06);border-color:var(--accent);color:var(--text2)}
+.callout.warn{background:rgba(245,158,11,0.06);border-color:var(--yellow);color:var(--text2)}
+.callout.tip{background:rgba(16,185,129,0.06);border-color:var(--green);color:var(--text2)}
+.callout strong{display:block;margin-bottom:4px;color:var(--text)}
+
+/* Badge */
+.badge{display:inline-block;padding:2px 8px;font-size:11px;font-weight:600;border-radius:4px;margin-left:6px;vertical-align:middle}
+.badge.new{background:rgba(0,163,255,0.15);color:var(--accent)}
+.badge.adv{background:rgba(139,92,246,0.15);color:var(--purple)}
+
+/* Responsive */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);transition:transform .3s ease;width:280px;background:var(--bg)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0;padding:calc(var(--nav-h) + 24px) 20px 60px}
+  .mobile-toggle{display:block}
+  .topnav-links{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- Top Nav -->
+<nav class="topnav">
+  <button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')" aria-label="Toggle menu">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+  </button>
+  <a href="index.html" class="topnav-brand"><span class="dot"></span> VibeKit</a>
+  <div class="topnav-links">
+    <a href="index.html">Home</a>
+    <a href="https://github.com/Euryalus-Kay/IntegratedAPI" target="_blank">GitHub</a>
+    <a href="https://www.npmjs.com/package/@vibekit/sdk" target="_blank">npm</a>
+  </div>
+  <div class="search-box">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="search" placeholder="Search docs..." oninput="filterSidebar(this.value)">
+  </div>
+</nav>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Getting Started</div>
+    <a href="#installation" class="sidebar-link">Installation</a>
+    <a href="#quick-start" class="sidebar-link">Quick Start</a>
+    <a href="#configuration" class="sidebar-link">Configuration</a>
+    <a href="#env-vars" class="sidebar-link">Environment Variables</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Database</div>
+    <a href="#db-queries" class="sidebar-link">Queries</a>
+    <a href="#db-query-builder" class="sidebar-link">Query Builder</a>
+    <a href="#db-schema" class="sidebar-link">Schema &amp; Migrations</a>
+    <a href="#db-transactions" class="sidebar-link">Transactions</a>
+    <a href="#db-seeding" class="sidebar-link">Seeding</a>
+    <a href="#db-events" class="sidebar-link">Events &amp; Health</a>
+    <a href="#db-search" class="sidebar-link sub">Full-Text Search</a>
+    <a href="#db-vectors" class="sidebar-link sub">Vector Search</a>
+    <a href="#db-cron" class="sidebar-link sub">Cron Jobs</a>
+    <a href="#db-queues" class="sidebar-link sub">Queues</a>
+    <a href="#db-rls" class="sidebar-link sub">Row-Level Security</a>
+    <a href="#db-branching" class="sidebar-link sub">Branching</a>
+    <a href="#db-migrations-adv" class="sidebar-link sub">Migration Manager</a>
+    <a href="#db-pool" class="sidebar-link sub">Connection Pool</a>
+    <a href="#db-backups" class="sidebar-link sub">Backups</a>
+    <a href="#db-replicas" class="sidebar-link sub">Replicas</a>
+    <a href="#db-typegen" class="sidebar-link sub">Type Generation</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Authentication</div>
+    <a href="#auth-basics" class="sidebar-link">Sign Up / Sign In</a>
+    <a href="#auth-sessions" class="sidebar-link">Sessions</a>
+    <a href="#auth-middleware" class="sidebar-link">Middleware</a>
+    <a href="#auth-oauth" class="sidebar-link sub">OAuth Providers</a>
+    <a href="#auth-magic-links" class="sidebar-link sub">Magic Links</a>
+    <a href="#auth-phone" class="sidebar-link sub">Phone Auth</a>
+    <a href="#auth-mfa" class="sidebar-link sub">MFA / 2FA</a>
+    <a href="#auth-orgs" class="sidebar-link sub">Organizations</a>
+    <a href="#auth-permissions" class="sidebar-link sub">Roles &amp; Permissions</a>
+    <a href="#auth-passkeys" class="sidebar-link sub">Passkeys</a>
+    <a href="#auth-sso" class="sidebar-link sub">SSO / SAML</a>
+    <a href="#auth-captcha" class="sidebar-link sub">CAPTCHA</a>
+    <a href="#auth-anonymous" class="sidebar-link sub">Anonymous Auth</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Storage</div>
+    <a href="#storage-basics" class="sidebar-link">Upload &amp; Manage</a>
+    <a href="#storage-s3" class="sidebar-link">S3 / R2 Production</a>
+    <a href="#storage-resumable" class="sidebar-link sub">Resumable Uploads</a>
+    <a href="#storage-transforms" class="sidebar-link sub">Image Transforms</a>
+    <a href="#storage-cdn" class="sidebar-link sub">CDN Manager</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Email</div>
+    <a href="#email-send" class="sidebar-link">Sending Email</a>
+    <a href="#email-templates" class="sidebar-link">Templates</a>
+    <a href="#email-providers" class="sidebar-link">Providers</a>
+    <a href="#email-domains" class="sidebar-link sub">Domain Manager</a>
+    <a href="#email-suppression" class="sidebar-link sub">Suppression Lists</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Realtime</div>
+    <a href="#realtime-basics" class="sidebar-link">Pub/Sub</a>
+    <a href="#realtime-broadcast" class="sidebar-link sub">Broadcast</a>
+    <a href="#realtime-presence" class="sidebar-link sub">Presence</a>
+    <a href="#realtime-cdc" class="sidebar-link sub">Change Data Capture</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">More Modules</div>
+    <a href="#functions" class="sidebar-link">Edge Functions</a>
+    <a href="#flags" class="sidebar-link">Feature Flags</a>
+    <a href="#analytics" class="sidebar-link">Analytics</a>
+    <a href="#observability" class="sidebar-link">Observability</a>
+    <a href="#secrets" class="sidebar-link">Secrets Vault</a>
+    <a href="#environments" class="sidebar-link">Environments</a>
+    <a href="#deploy" class="sidebar-link">Deploy</a>
+    <a href="#webhooks" class="sidebar-link">Webhooks</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Tools</div>
+    <a href="#mcp-server" class="sidebar-link">MCP Server</a>
+    <a href="#errors" class="sidebar-link">Error Handling</a>
+    <a href="#logging" class="sidebar-link">Logging</a>
+  </div>
+</aside>
+
+<!-- Main Content -->
+<main class="main">
+
+<h1>VibeKit Documentation</h1>
+<p>The unified backend SDK that replaces Supabase, Vercel, Railway, Neon, Clerk, and Resend. One import. Every backend feature. Zero config.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="installation">Installation</h2>
+<pre><code><span class="cm"># Install the SDK</span>
+npm install @vibekit/sdk
+
+<span class="cm"># For MCP server (AI agents)</span>
+npm install @vibekit/mcp-server</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h2 id="quick-start">Quick Start</h2>
+<pre><code><span class="kw">import</span> { db, auth, storage, email } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+<span class="cm">// Define a table</span>
+db.defineTable(<span class="str">'posts'</span>, {
+  title: <span class="str">'text'</span>,
+  body: <span class="str">'text'</span>,
+  author_id: <span class="str">'integer'</span>,
+  published: { type: <span class="str">'boolean'</span>, default: <span class="kw">false</span> },
+}, { timestamps: <span class="kw">true</span> })
+
+<span class="cm">// Auto-create tables</span>
+<span class="kw">await</span> db.sync()
+
+<span class="cm">// Insert data</span>
+<span class="kw">await</span> db.execute(
+  <span class="str">'INSERT INTO posts (title, body, author_id) VALUES ($1, $2, $3)'</span>,
+  [<span class="str">'Hello World'</span>, <span class="str">'My first post'</span>, <span class="num">1</span>]
+)
+
+<span class="cm">// Query data</span>
+<span class="kw">const</span> { rows } = <span class="kw">await</span> db.query(<span class="str">'SELECT * FROM posts WHERE author_id = $1'</span>, [<span class="num">1</span>])
+
+<span class="cm">// Auth</span>
+<span class="kw">const</span> { user, session } = <span class="kw">await</span> auth.signUp(<span class="str">'user@example.com'</span>, <span class="str">'password123'</span>)
+
+<span class="cm">// Storage</span>
+<span class="kw">await</span> storage.upload(Buffer.from(<span class="str">'hello'</span>), { filename: <span class="str">'hello.txt'</span> })
+
+<span class="cm">// Email</span>
+<span class="kw">await</span> email.send({ to: <span class="str">'user@example.com'</span>, subject: <span class="str">'Welcome!'</span>, html: <span class="str">'&lt;h1&gt;Hi!&lt;/h1&gt;'</span> })</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<div class="callout info"><strong>Local-first development</strong> VibeKit uses SQLite locally and Postgres in production. No Docker, no services to start. Just <code>npm install</code> and go.</div>
+
+<h2 id="configuration">Configuration</h2>
+<pre><code><span class="kw">import</span> { setConfig, getConfig, isLocal, isProduction } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+<span class="fn">setConfig</span>({
+  projectId: <span class="str">'my-app'</span>,
+  dbPath: <span class="str">'./.vibekit/data.db'</span>,     <span class="cm">// SQLite path (local)</span>
+  modules: {
+    auth: <span class="kw">true</span>,
+    storage: <span class="kw">true</span>,
+    email: { from: <span class="str">'hello@myapp.com'</span> },
+  }
+})
+
+<span class="fn">isLocal</span>()       <span class="cm">// true in development</span>
+<span class="fn">isProduction</span>()  <span class="cm">// true when NODE_ENV=production</span></code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h2 id="env-vars">Environment Variables</h2>
+<table>
+<tr><th>Variable</th><th>Description</th></tr>
+<tr><td><code>DATABASE_URL</code></td><td>Postgres connection string (production)</td></tr>
+<tr><td><code>VIBEKIT_SECRET</code></td><td>JWT signing secret for auth sessions</td></tr>
+<tr><td><code>RESEND_API_KEY</code></td><td>Resend email provider API key</td></tr>
+<tr><td><code>SMTP_HOST</code></td><td>SMTP server host</td></tr>
+<tr><td><code>SENDGRID_API_KEY</code></td><td>SendGrid API key</td></tr>
+<tr><td><code>MAILGUN_API_KEY</code></td><td>Mailgun API key</td></tr>
+<tr><td><code>S3_BUCKET</code></td><td>S3 bucket name (production storage)</td></tr>
+<tr><td><code>S3_REGION</code></td><td>S3 region</td></tr>
+<tr><td><code>S3_ACCESS_KEY_ID</code></td><td>S3 access key</td></tr>
+<tr><td><code>S3_SECRET_ACCESS_KEY</code></td><td>S3 secret key</td></tr>
+<tr><td><code>R2_BUCKET</code></td><td>Cloudflare R2 bucket name</td></tr>
+<tr><td><code>R2_ACCOUNT_ID</code></td><td>Cloudflare account ID</td></tr>
+<tr><td><code>NODE_ENV</code></td><td>Set to <code>production</code> for prod mode</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="db-queries">Database &mdash; Queries</h2>
+<p>VibeKit uses <strong>parameterized queries</strong> with <code>$1, $2, ...</code> placeholders. SQLite locally, Postgres in production.</p>
+<pre><code><span class="kw">import</span> { db } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+<span class="cm">// SELECT multiple rows</span>
+<span class="kw">const</span> { rows } = <span class="kw">await</span> db.query&lt;Post&gt;(<span class="str">'SELECT * FROM posts WHERE published = $1'</span>, [<span class="kw">true</span>])
+
+<span class="cm">// SELECT single row</span>
+<span class="kw">const</span> user = <span class="kw">await</span> db.queryOne&lt;User&gt;(<span class="str">'SELECT * FROM users WHERE id = $1'</span>, [<span class="num">42</span>])
+
+<span class="cm">// INSERT / UPDATE / DELETE</span>
+<span class="kw">const</span> result = <span class="kw">await</span> db.execute(
+  <span class="str">'INSERT INTO users (name, email) VALUES ($1, $2)'</span>,
+  [<span class="str">'Alice'</span>, <span class="str">'alice@example.com'</span>]
+)
+<span class="cm">// result.rowCount = 1</span>
+
+<span class="cm">// Paginated queries</span>
+<span class="kw">const</span> page = <span class="kw">await</span> db.paginate&lt;Post&gt;(<span class="str">'SELECT * FROM posts'</span>, [], { page: <span class="num">1</span>, pageSize: <span class="num">20</span> })
+<span class="cm">// page.rows, page.totalPages, page.hasNext, page.hasPrev</span></code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h2 id="db-query-builder">Database &mdash; Query Builder</h2>
+<pre><code><span class="cm">// Fluent query builder</span>
+<span class="kw">const</span> posts = <span class="kw">await</span> db.from&lt;Post&gt;(<span class="str">'posts'</span>)
+  .select(<span class="str">'id'</span>, <span class="str">'title'</span>, <span class="str">'created_at'</span>)
+  .where(<span class="str">'published'</span>, <span class="kw">true</span>)
+  .orderBy(<span class="str">'created_at'</span>, <span class="str">'desc'</span>)
+  .limit(<span class="num">10</span>)
+  .execute()
+
+<span class="cm">// Insert via builder</span>
+<span class="kw">await</span> db.from(<span class="str">'posts'</span>).insert({ title: <span class="str">'New Post'</span>, body: <span class="str">'Content here'</span> })
+
+<span class="cm">// Update via builder</span>
+<span class="kw">await</span> db.from(<span class="str">'posts'</span>).where(<span class="str">'id'</span>, <span class="num">1</span>).update({ title: <span class="str">'Updated'</span> })
+
+<span class="cm">// Delete via builder</span>
+<span class="kw">await</span> db.from(<span class="str">'posts'</span>).where(<span class="str">'id'</span>, <span class="num">1</span>).delete()</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h2 id="db-schema">Database &mdash; Schema &amp; Migrations</h2>
+<pre><code><span class="cm">// Define tables declaratively</span>
+db.defineTable(<span class="str">'users'</span>, {
+  name: <span class="str">'text'</span>,
+  email: { type: <span class="str">'text'</span>, unique: <span class="kw">true</span> },
+  role: { type: <span class="str">'text'</span>, default: <span class="str">'user'</span> },
+  age: <span class="str">'integer'</span>,
+}, { timestamps: <span class="kw">true</span> })
+
+db.defineTable(<span class="str">'posts'</span>, {
+  title: <span class="str">'text'</span>,
+  body: <span class="str">'text'</span>,
+  author_id: <span class="str">'integer'</span>,
+  published: { type: <span class="str">'boolean'</span>, default: <span class="kw">false</span> },
+}, {
+  timestamps: <span class="kw">true</span>,
+  indexes: [{ columns: [<span class="str">'author_id'</span>] }]
+})
+
+<span class="cm">// Auto-sync: creates tables, adds missing columns</span>
+<span class="kw">const</span> { created, modified } = <span class="kw">await</span> db.sync()
+
+<span class="cm">// Column types: text, integer, real, boolean, json, blob, date, uuid</span></code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h2 id="db-transactions">Database &mdash; Transactions</h2>
+<pre><code><span class="kw">await</span> db.transaction(<span class="kw">async</span> (tx) =&gt; {
+  <span class="kw">await</span> tx.execute(<span class="str">'INSERT INTO accounts (name, balance) VALUES ($1, $2)'</span>, [<span class="str">'Alice'</span>, <span class="num">1000</span>])
+  <span class="kw">await</span> tx.execute(<span class="str">'UPDATE accounts SET balance = balance - $1 WHERE name = $2'</span>, [<span class="num">100</span>, <span class="str">'Alice'</span>])
+  <span class="kw">await</span> tx.execute(<span class="str">'UPDATE accounts SET balance = balance + $1 WHERE name = $2'</span>, [<span class="num">100</span>, <span class="str">'Bob'</span>])
+  <span class="cm">// Automatically commits, or rolls back on error</span>
+})</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h2 id="db-seeding">Database &mdash; Seeding</h2>
+<pre><code><span class="kw">await</span> db.seed(<span class="kw">async</span> (ctx) =&gt; {
+  ctx.log(<span class="str">'Seeding users...'</span>)
+  <span class="kw">await</span> ctx.insert(<span class="str">'users'</span>, { name: <span class="str">'Alice'</span>, email: <span class="str">'alice@example.com'</span> })
+  <span class="kw">await</span> ctx.insertMany(<span class="str">'posts'</span>, [
+    { title: <span class="str">'Hello'</span>, author_id: <span class="num">1</span> },
+    { title: <span class="str">'World'</span>, author_id: <span class="num">1</span> },
+  ])
+  <span class="kw">await</span> ctx.truncate(<span class="str">'logs'</span>)  <span class="cm">// Clear a table</span>
+})</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h2 id="db-events">Database &mdash; Events &amp; Health</h2>
+<pre><code><span class="cm">// Listen to database events</span>
+db.on(<span class="str">'query'</span>, (log) =&gt; console.log(<span class="str">`Query: ${log.sql} (${log.duration}ms)`</span>))
+db.on(<span class="str">'slow-query'</span>, (log) =&gt; console.warn(<span class="str">'Slow query detected:'</span>, log.sql))
+db.on(<span class="str">'error'</span>, (err) =&gt; console.error(<span class="str">'DB error:'</span>, err))
+
+<span class="cm">// Health check</span>
+<span class="kw">const</span> health = <span class="kw">await</span> db.health()
+<span class="cm">// { status: 'healthy', latencyMs: 0.42, tableCount: 5 }</span>
+
+<span class="cm">// Query log</span>
+<span class="kw">const</span> logs = db.getQueryLog()  <span class="cm">// Last 50 queries</span>
+
+<span class="cm">// Connection info</span>
+<span class="kw">const</span> info = db.getConnectionInfo()  <span class="cm">// { mode: 'sqlite', database: '.vibekit/data.db' }</span></code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="db-search">Full-Text Search <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { createSearchManager } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+<span class="kw">const</span> search = createSearchManager(db)
+
+<span class="kw">await</span> search.createIndex(<span class="str">'posts'</span>, [<span class="str">'title'</span>, <span class="str">'body'</span>])
+<span class="kw">const</span> results = <span class="kw">await</span> search.search(<span class="str">'posts'</span>, <span class="str">'hello world'</span>, { limit: <span class="num">10</span> })</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="db-vectors">Vector Search <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { createVectorManager } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+<span class="kw">const</span> vectors = createVectorManager(db)
+
+<span class="kw">await</span> vectors.createCollection(<span class="str">'embeddings'</span>, { dimensions: <span class="num">1536</span> })
+<span class="kw">await</span> vectors.insert(<span class="str">'embeddings'</span>, { id: <span class="str">'doc1'</span>, vector: [...], metadata: { title: <span class="str">'Doc 1'</span> } })
+<span class="kw">const</span> similar = <span class="kw">await</span> vectors.search(<span class="str">'embeddings'</span>, queryVector, { limit: <span class="num">5</span> })</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="db-cron">Cron Jobs <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { createCronManager } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+<span class="kw">const</span> cron = createCronManager(db)
+
+<span class="kw">await</span> cron.schedule({ name: <span class="str">'cleanup'</span>, schedule: <span class="str">'0 2 * * *'</span>, command: <span class="str">'DELETE FROM logs WHERE created_at &lt; date("now", "-30 days")'</span> })
+<span class="kw">const</span> jobs = <span class="kw">await</span> cron.list()
+<span class="kw">const</span> history = <span class="kw">await</span> cron.history(<span class="str">'cleanup'</span>)</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="db-queues">Message Queues <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { createQueueManager } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+<span class="kw">const</span> queues = createQueueManager(db)
+
+<span class="kw">await</span> queues.create(<span class="str">'email-queue'</span>)
+<span class="kw">await</span> queues.send(<span class="str">'email-queue'</span>, { to: <span class="str">'user@example.com'</span>, template: <span class="str">'welcome'</span> })
+<span class="kw">const</span> messages = <span class="kw">await</span> queues.read(<span class="str">'email-queue'</span>, { limit: <span class="num">10</span> })</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="db-rls">Row-Level Security <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { createRLSManager } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+<span class="kw">const</span> rls = createRLSManager(db)
+
+<span class="kw">await</span> rls.create({ table: <span class="str">'posts'</span>, name: <span class="str">'users_own_posts'</span>, operation: <span class="str">'SELECT'</span>, check: <span class="str">'author_id = current_user_id()'</span> })
+<span class="kw">const</span> policies = <span class="kw">await</span> rls.list(<span class="str">'posts'</span>)</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="db-branching">Database Branching <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { createBranchManager } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+<span class="kw">const</span> branches = createBranchManager(db)
+
+<span class="kw">await</span> branches.create(<span class="str">'feature-xyz'</span>)
+<span class="kw">await</span> branches.switch(<span class="str">'feature-xyz'</span>)
+<span class="kw">const</span> all = <span class="kw">await</span> branches.list()</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="db-migrations-adv">Migration Manager <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { createMigrationManager } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+<span class="kw">const</span> migrations = createMigrationManager(db)
+
+<span class="kw">await</span> migrations.generate(<span class="str">'add_avatar_to_users'</span>)
+<span class="kw">await</span> migrations.up()          <span class="cm">// Run next migration</span>
+<span class="kw">await</span> migrations.upAll()       <span class="cm">// Run all pending</span>
+<span class="kw">await</span> migrations.down()        <span class="cm">// Rollback last</span>
+<span class="kw">const</span> status = <span class="kw">await</span> migrations.status()</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="db-pool">Connection Pool <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { createConnectionPool } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+<span class="kw">const</span> pool = createConnectionPool(db, { min: <span class="num">2</span>, max: <span class="num">10</span> })
+
+<span class="kw">const</span> conn = <span class="kw">await</span> pool.acquire()
+<span class="kw">const</span> stats = pool.stats()  <span class="cm">// { size, available, waiting }</span>
+<span class="kw">await</span> pool.release(conn)
+<span class="kw">await</span> pool.drain()</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="db-backups">Backups <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { createBackupManager } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+<span class="kw">const</span> backups = createBackupManager(db)
+
+<span class="kw">const</span> backup = <span class="kw">await</span> backups.create({ description: <span class="str">'Before migration'</span> })
+<span class="kw">await</span> backups.restore(backup.id)
+<span class="kw">await</span> backups.schedule({ cron: <span class="str">'0 3 * * *'</span>, retention: <span class="num">7</span> })</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="db-replicas">Read Replicas <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { createReplicaManager } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+<span class="kw">const</span> replicas = createReplicaManager(db)
+
+<span class="kw">await</span> replicas.add({ name: <span class="str">'read-east'</span>, connectionString: <span class="str">'postgres://...'</span> })
+<span class="kw">const</span> status = <span class="kw">await</span> replicas.status()</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="db-typegen">Type Generation <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { createTypeGenerator } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+<span class="kw">const</span> typegen = createTypeGenerator(db)
+
+<span class="kw">await</span> typegen.generate(<span class="str">'./src/db-types.ts'</span>)  <span class="cm">// Generates TypeScript interfaces from schema</span>
+typegen.watch(<span class="str">'./src/db-types.ts'</span>)         <span class="cm">// Auto-regenerate on schema changes</span></code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="auth-basics">Authentication &mdash; Sign Up / Sign In</h2>
+<pre><code><span class="kw">import</span> { auth } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+<span class="cm">// Sign up</span>
+<span class="kw">const</span> { user, session } = <span class="kw">await</span> auth.signUp(<span class="str">'user@example.com'</span>, <span class="str">'securePass123'</span>)
+
+<span class="cm">// Sign in</span>
+<span class="kw">const</span> result = <span class="kw">await</span> auth.signIn(<span class="str">'user@example.com'</span>, <span class="str">'securePass123'</span>)
+
+<span class="cm">// Get user info</span>
+<span class="kw">const</span> user = <span class="kw">await</span> auth.getUser(userId)
+<span class="kw">const</span> { users, total } = <span class="kw">await</span> auth.listUsers({ limit: <span class="num">50</span> })
+
+<span class="cm">// Sign out</span>
+<span class="kw">await</span> auth.signOut(session.token)
+
+<span class="cm">// Verify email</span>
+<span class="kw">const</span> { code } = <span class="kw">await</span> auth.sendVerificationCode(<span class="str">'user@example.com'</span>)
+<span class="kw">await</span> auth.verifyCode(<span class="str">'user@example.com'</span>, code)</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h2 id="auth-sessions">Authentication &mdash; Sessions</h2>
+<pre><code><span class="cm">// Verify a session token</span>
+<span class="kw">const</span> session = <span class="kw">await</span> auth.verifySession(token)
+<span class="cm">// { userId, email, role, expiresAt, ... }</span>
+
+<span class="cm">// Revoke a session</span>
+<span class="kw">await</span> auth.signOut(token)
+
+<span class="cm">// Get active sessions for a user</span>
+<span class="kw">const</span> sessions = <span class="kw">await</span> auth.getActiveSessions(userId)
+
+<span class="cm">// Revoke all sessions</span>
+<span class="kw">await</span> auth.revokeAllSessions(userId)</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h2 id="auth-middleware">Authentication &mdash; Middleware</h2>
+<pre><code><span class="kw">import</span> { protect, requireAuth, requireRole, rateLimit } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+<span class="cm">// Express-style middleware</span>
+app.use(<span class="str">'/api'</span>, protect())              <span class="cm">// Attach user to req if valid token</span>
+app.use(<span class="str">'/api/admin'</span>, requireRole(<span class="str">'admin'</span>))  <span class="cm">// Require admin role</span>
+app.use(<span class="str">'/api'</span>, rateLimit({ max: <span class="num">100</span>, window: <span class="str">'15m'</span> }))
+
+<span class="cm">// Hono middleware also available</span>
+<span class="kw">import</span> { honoProtect, honoRequireRole } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+app.use(<span class="str">'*'</span>, honoProtect())</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="auth-oauth">OAuth Providers <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { oauth } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+oauth.configureProvider(<span class="str">'google'</span>, {
+  clientId: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  redirectUri: <span class="str">'http://localhost:3000/callback'</span>,
+})
+
+<span class="kw">const</span> { url } = <span class="kw">await</span> oauth.getAuthUrl(<span class="str">'google'</span>, { scopes: [<span class="str">'email'</span>, <span class="str">'profile'</span>] })
+<span class="kw">const</span> { user, session } = <span class="kw">await</span> oauth.handleCallback(<span class="str">'google'</span>, { code })</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="auth-magic-links">Magic Links <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { magicLinks } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+<span class="kw">const</span> { token } = <span class="kw">await</span> magicLinks.send(<span class="str">'user@example.com'</span>, { redirectTo: <span class="str">'/dashboard'</span> })
+<span class="kw">const</span> { user, session } = <span class="kw">await</span> magicLinks.verify(token)</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="auth-phone">Phone Auth <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { phone } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+<span class="kw">const</span> { code } = <span class="kw">await</span> phone.sendCode(<span class="str">'+1234567890'</span>)
+<span class="kw">const</span> { user, session } = <span class="kw">await</span> phone.verify(<span class="str">'+1234567890'</span>, code)</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="auth-mfa">Multi-Factor Authentication <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { mfa } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+<span class="kw">const</span> { secret, uri, qrCode } = <span class="kw">await</span> mfa.enroll(userId, <span class="str">'totp'</span>)
+<span class="kw">const</span> challenge = <span class="kw">await</span> mfa.challenge(userId, factorId)
+<span class="kw">const</span> { valid } = <span class="kw">await</span> mfa.verify(userId, challenge.id, <span class="str">'123456'</span>)</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="auth-orgs">Organizations <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { organizations } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+<span class="kw">const</span> org = <span class="kw">await</span> organizations.create({ name: <span class="str">'Acme Inc'</span>, ownerId: userId })
+<span class="kw">await</span> organizations.addMember(org.id, memberId, <span class="str">'editor'</span>)
+<span class="kw">await</span> organizations.invite(org.id, { email: <span class="str">'new@acme.com'</span>, role: <span class="str">'viewer'</span> })
+<span class="kw">const</span> members = <span class="kw">await</span> organizations.listMembers(org.id)</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="auth-permissions">Roles &amp; Permissions <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { permissions } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+<span class="kw">await</span> permissions.createPermission({ name: <span class="str">'posts.write'</span>, description: <span class="str">'Can create posts'</span> })
+<span class="kw">await</span> permissions.createRole({ name: <span class="str">'editor'</span>, permissions: [<span class="str">'posts.write'</span>, <span class="str">'posts.read'</span>] })
+<span class="kw">await</span> permissions.assignRole(userId, <span class="str">'editor'</span>)
+<span class="kw">const</span> userPerms = <span class="kw">await</span> permissions.getUserPermissions(userId)</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="auth-passkeys">Passkeys (WebAuthn) <span class="badge new">v2</span></h3>
+<pre><code><span class="kw">import</span> { passkeys } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+<span class="cm">// Registration</span>
+<span class="kw">const</span> challenge = <span class="kw">await</span> passkeys.beginRegistration(userId, <span class="str">'user@example.com'</span>)
+<span class="kw">const</span> credential = <span class="kw">await</span> passkeys.completeRegistration(userId, challenge.id, attestation)
+
+<span class="cm">// Login</span>
+<span class="kw">const</span> loginChallenge = <span class="kw">await</span> passkeys.beginLogin(<span class="str">'user@example.com'</span>)
+<span class="kw">const</span> { user, session } = <span class="kw">await</span> passkeys.completeLogin(loginChallenge.id, assertion)</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="auth-sso">SSO / SAML <span class="badge new">v2</span></h3>
+<pre><code><span class="kw">import</span> { sso } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+<span class="kw">const</span> provider = <span class="kw">await</span> sso.configureProvider({
+  type: <span class="str">'saml'</span>, name: <span class="str">'Okta'</span>,
+  metadataUrl: <span class="str">'https://okta.example.com/metadata'</span>,
+})
+<span class="kw">const</span> { redirectUrl } = <span class="kw">await</span> sso.initiate(provider.id)
+<span class="kw">const</span> { user, session } = <span class="kw">await</span> sso.handleCallback(provider.id, samlResponse)</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="auth-captcha">CAPTCHA <span class="badge new">v2</span></h3>
+<pre><code><span class="kw">import</span> { captcha } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+captcha.configure({ provider: <span class="str">'turnstile'</span>, siteKey: <span class="str">'...'</span>, secretKey: <span class="str">'...'</span> })
+<span class="kw">const</span> { valid, score } = <span class="kw">await</span> captcha.verify(token)</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="auth-anonymous">Anonymous Auth <span class="badge new">v2</span></h3>
+<pre><code><span class="kw">import</span> { anonymous } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+<span class="kw">const</span> { user, session } = <span class="kw">await</span> anonymous.signIn()
+<span class="cm">// Later, convert to permanent account</span>
+<span class="kw">const</span> result = <span class="kw">await</span> anonymous.convert(user.id, { email: <span class="str">'real@email.com'</span>, password: <span class="str">'pass123'</span> })</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="storage-basics">Storage &mdash; Upload &amp; Manage</h2>
+<pre><code><span class="kw">import</span> { storage } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+<span class="cm">// Upload a file</span>
+<span class="kw">const</span> file = <span class="kw">await</span> storage.upload(Buffer.from(<span class="str">'hello'</span>), {
+  filename: <span class="str">'hello.txt'</span>,
+  contentType: <span class="str">'text/plain'</span>,
+  folder: <span class="str">'documents'</span>,
+  public: <span class="kw">true</span>,
+})
+<span class="cm">// file.url, file.path, file.size</span>
+
+<span class="cm">// Get file URL</span>
+<span class="kw">const</span> url = storage.getUrl(<span class="str">'documents/hello.txt'</span>)
+
+<span class="cm">// List files</span>
+<span class="kw">const</span> { files, hasMore, cursor } = <span class="kw">await</span> storage.list({ folder: <span class="str">'documents'</span>, limit: <span class="num">20</span> })
+
+<span class="cm">// Check / Get info</span>
+<span class="kw">const</span> exists = <span class="kw">await</span> storage.exists(<span class="str">'documents/hello.txt'</span>)
+<span class="kw">const</span> info = <span class="kw">await</span> storage.getInfo(<span class="str">'documents/hello.txt'</span>)
+
+<span class="cm">// Delete</span>
+<span class="kw">await</span> storage.delete(<span class="str">'documents/hello.txt'</span>)
+<span class="kw">await</span> storage.deleteMany([<span class="str">'file1.txt'</span>, <span class="str">'file2.txt'</span>])</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h2 id="storage-s3">Storage &mdash; S3 / R2 Production</h2>
+<p>In production, storage automatically uses S3 or R2 based on environment variables. No code changes needed.</p>
+<pre><code><span class="cm"># .env for S3</span>
+S3_BUCKET=my-bucket
+S3_REGION=us-east-1
+S3_ACCESS_KEY_ID=AKIA...
+S3_SECRET_ACCESS_KEY=...
+
+<span class="cm"># .env for Cloudflare R2</span>
+R2_BUCKET=my-bucket
+R2_ACCOUNT_ID=abc123
+R2_ACCESS_KEY_ID=...
+R2_SECRET_ACCESS_KEY=...</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+<div class="callout tip"><strong>Zero config switching.</strong> The same <code>storage.upload()</code> code works locally (file system) and in production (S3/R2). VibeKit auto-detects your environment.</div>
+
+<h3 id="storage-resumable">Resumable Uploads <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { createResumableUploadManager } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+<span class="kw">const</span> resumable = createResumableUploadManager(storage)
+
+<span class="kw">const</span> session = <span class="kw">await</span> resumable.create({ path: <span class="str">'videos/big.mp4'</span>, totalSize: <span class="num">1073741824</span> })
+<span class="kw">await</span> resumable.uploadChunk(session.uploadId, chunkData, { offset: <span class="num">0</span> })
+<span class="kw">const</span> status = <span class="kw">await</span> resumable.status(session.uploadId)
+<span class="kw">const</span> result = <span class="kw">await</span> resumable.complete(session.uploadId)</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="storage-transforms">Image Transforms <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { createImageTransformer } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+<span class="kw">const</span> images = createImageTransformer(storage)
+
+<span class="kw">const</span> thumb = <span class="kw">await</span> images.transform(<span class="str">'photos/hero.jpg'</span>, {
+  width: <span class="num">300</span>, height: <span class="num">300</span>, resize: <span class="str">'cover'</span>, format: <span class="str">'webp'</span>, quality: <span class="num">80</span>
+})</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="storage-cdn">CDN Manager <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { createCdnManager } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+<span class="kw">const</span> cdn = createCdnManager(storage)
+
+<span class="kw">await</span> cdn.purge(<span class="str">'photos/hero.jpg'</span>)
+<span class="kw">await</span> cdn.warmCache([<span class="str">'img/logo.png'</span>, <span class="str">'img/hero.jpg'</span>])
+<span class="kw">const</span> stats = <span class="kw">await</span> cdn.stats()</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="email-send">Email &mdash; Sending</h2>
+<pre><code><span class="kw">import</span> { email } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+<span class="cm">// Send a single email</span>
+<span class="kw">const</span> result = <span class="kw">await</span> email.send({
+  to: <span class="str">'user@example.com'</span>,
+  subject: <span class="str">'Welcome to MyApp'</span>,
+  html: <span class="str">'&lt;h1&gt;Welcome!&lt;/h1&gt;&lt;p&gt;Thanks for signing up.&lt;/p&gt;'</span>,
+})
+
+<span class="cm">// Send to multiple recipients</span>
+<span class="kw">await</span> email.send({ to: [<span class="str">'a@test.com'</span>, <span class="str">'b@test.com'</span>], subject: <span class="str">'Update'</span>, html: <span class="str">'...'</span> })
+
+<span class="cm">// Batch send</span>
+<span class="kw">await</span> email.sendBatch([
+  { to: <span class="str">'a@test.com'</span>, subject: <span class="str">'Hi A'</span>, html: <span class="str">'...'</span> },
+  { to: <span class="str">'b@test.com'</span>, subject: <span class="str">'Hi B'</span>, html: <span class="str">'...'</span> },
+])
+
+<span class="cm">// Validate an email</span>
+<span class="kw">const</span> { valid, reason } = email.validate(<span class="str">'test@example.com'</span>)</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h2 id="email-templates">Email &mdash; Templates</h2>
+<pre><code><span class="cm">// Register a template</span>
+email.registerTemplate(<span class="str">'welcome'</span>, {
+  subject: <span class="str">'Welcome, {{name}}!'</span>,
+  html: <span class="str">'&lt;h1&gt;Hi {{name}}&lt;/h1&gt;&lt;p&gt;Welcome to {{appName}}.&lt;/p&gt;'</span>,
+})
+
+<span class="cm">// Send with template</span>
+<span class="kw">await</span> email.send({
+  to: <span class="str">'user@example.com'</span>,
+  template: <span class="str">'welcome'</span>,
+  data: { name: <span class="str">'Alice'</span>, appName: <span class="str">'MyApp'</span> },
+})</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h2 id="email-providers">Email &mdash; Providers</h2>
+<p>VibeKit auto-detects your email provider from environment variables in this priority order:</p>
+<ol>
+<li><code>RESEND_API_KEY</code> &mdash; Resend</li>
+<li><code>SMTP_HOST</code> &mdash; SMTP (with <code>SMTP_PORT</code>, <code>SMTP_USER</code>, <code>SMTP_PASS</code>)</li>
+<li><code>SENDGRID_API_KEY</code> &mdash; SendGrid</li>
+<li><code>MAILGUN_API_KEY</code> &mdash; Mailgun (with <code>MAILGUN_DOMAIN</code>)</li>
+</ol>
+<p>In local development, emails are logged to the console with a visual preview.</p>
+
+<h3 id="email-domains">Domain Manager <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { createDomainManager } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+<span class="kw">const</span> domains = createDomainManager(email)
+
+<span class="kw">await</span> domains.add(<span class="str">'mail.myapp.com'</span>)
+<span class="kw">const</span> records = <span class="kw">await</span> domains.getDnsRecords(<span class="str">'mail.myapp.com'</span>)
+<span class="kw">const</span> verified = <span class="kw">await</span> domains.verify(<span class="str">'mail.myapp.com'</span>)</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="email-suppression">Suppression Lists <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { suppression } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+<span class="kw">await</span> suppression.add(<span class="str">'bounced@example.com'</span>, <span class="str">'hard_bounce'</span>)
+<span class="kw">const</span> list = <span class="kw">await</span> suppression.list({ limit: <span class="num">50</span> })
+<span class="kw">const</span> isSuppressed = <span class="kw">await</span> suppression.check(<span class="str">'bounced@example.com'</span>)</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="realtime-basics">Realtime &mdash; Pub/Sub</h2>
+<pre><code><span class="kw">import</span> { realtime } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+<span class="cm">// Subscribe to a channel</span>
+<span class="kw">const</span> unsubscribe = realtime.subscribe(<span class="str">'chat:general'</span>, (message) =&gt; {
+  console.log(<span class="str">'New message:'</span>, message.data)
+})
+
+<span class="cm">// Publish to a channel</span>
+realtime.publish(<span class="str">'chat:general'</span>, { user: <span class="str">'Alice'</span>, text: <span class="str">'Hello!'</span> })
+
+<span class="cm">// Get channel info</span>
+<span class="kw">const</span> info = realtime.getChannel(<span class="str">'chat:general'</span>)
+<span class="kw">const</span> channels = realtime.getChannels()</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="realtime-broadcast">Broadcast <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { broadcast } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+broadcast.send(<span class="str">'notifications'</span>, <span class="str">'new-alert'</span>, { message: <span class="str">'Server restarting'</span> })
+broadcast.subscribe(<span class="str">'notifications'</span>, <span class="str">'new-alert'</span>, (event) =&gt; { ... })</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="realtime-presence">Presence <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { presenceV2 } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+presenceV2.track(<span class="str">'room:lobby'</span>, { userId: <span class="str">'alice'</span>, status: <span class="str">'online'</span> })
+presenceV2.onJoin(<span class="str">'room:lobby'</span>, (user) =&gt; console.log(<span class="str">'Joined:'</span>, user))
+presenceV2.onLeave(<span class="str">'room:lobby'</span>, (user) =&gt; console.log(<span class="str">'Left:'</span>, user))
+<span class="kw">const</span> users = presenceV2.getPresence(<span class="str">'room:lobby'</span>)</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h3 id="realtime-cdc">Change Data Capture <span class="badge adv">Advanced</span></h3>
+<pre><code><span class="kw">import</span> { cdc } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+<span class="kw">const</span> sub = cdc.subscribe(<span class="str">'posts'</span>, {
+  events: [<span class="str">'INSERT'</span>, <span class="str">'UPDATE'</span>],
+  filter: { published: <span class="kw">true</span> },
+  callback: (change) =&gt; {
+    console.log(<span class="str">'Change:'</span>, change.type, change.new)
+  }
+})</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="functions">Edge Functions</h2>
+<pre><code><span class="kw">import</span> { createFunctionRuntime } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+<span class="kw">const</span> runtime = createFunctionRuntime()
+
+<span class="cm">// Register a function</span>
+runtime.register(<span class="str">'hello'</span>, <span class="kw">async</span> (req, ctx) =&gt; {
+  <span class="kw">return</span> { status: <span class="num">200</span>, body: { message: <span class="str">`Hello ${req.body?.name || 'World'}`</span> } }
+}, {
+  cors: { origins: [<span class="str">'*'</span>] },
+  rateLimit: { max: <span class="num">100</span>, window: <span class="num">60</span> },
+})
+
+<span class="cm">// Invoke a function</span>
+<span class="kw">const</span> response = <span class="kw">await</span> runtime.invoke(<span class="str">'hello'</span>, {
+  method: <span class="str">'POST'</span>,
+  body: { name: <span class="str">'Alice'</span> },
+})</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h2 id="flags">Feature Flags</h2>
+<pre><code><span class="kw">import</span> { createFlagManager } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+<span class="kw">const</span> flags = createFlagManager({ adapter: dbAdapter })
+
+<span class="cm">// Create a flag</span>
+<span class="kw">await</span> flags.create(<span class="str">'new-dashboard'</span>, {
+  type: <span class="str">'boolean'</span>,
+  defaultValue: <span class="kw">false</span>,
+  targeting: [
+    { attribute: <span class="str">'email'</span>, operator: <span class="str">'ends_with'</span>, value: <span class="str">'@beta.com'</span>, serve: <span class="kw">true</span> }
+  ]
+})
+
+<span class="cm">// Evaluate a flag</span>
+<span class="kw">const</span> { value, reason } = <span class="kw">await</span> flags.evaluate(<span class="str">'new-dashboard'</span>, {
+  userId: <span class="str">'u123'</span>, email: <span class="str">'alice@beta.com'</span>
+})
+
+<span class="cm">// A/B experiments</span>
+<span class="kw">await</span> flags.createExperiment(<span class="str">'pricing-test'</span>, {
+  variants: [
+    { key: <span class="str">'control'</span>, weight: <span class="num">50</span> },
+    { key: <span class="str">'new-pricing'</span>, weight: <span class="num">50</span> },
+  ]
+})</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h2 id="analytics">Analytics</h2>
+<pre><code><span class="kw">import</span> { createAnalytics } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+<span class="kw">const</span> analytics = createAnalytics({ adapter: dbAdapter })
+
+<span class="cm">// Track events</span>
+<span class="kw">await</span> analytics.track({ name: <span class="str">'button_click'</span>, properties: { button: <span class="str">'signup'</span> } })
+
+<span class="cm">// Page views</span>
+<span class="kw">await</span> analytics.pageView({ path: <span class="str">'/pricing'</span>, referrer: <span class="str">'https://google.com'</span> })
+
+<span class="cm">// Identify users</span>
+<span class="kw">await</span> analytics.identify(<span class="str">'u123'</span>, { plan: <span class="str">'pro'</span>, company: <span class="str">'Acme'</span> })
+
+<span class="cm">// Query analytics</span>
+<span class="kw">const</span> topPages = <span class="kw">await</span> analytics.topPages({ timeRange: <span class="str">'7d'</span> })
+<span class="kw">const</span> visitors = <span class="kw">await</span> analytics.uniqueVisitors({ timeRange: <span class="str">'30d'</span> })</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h2 id="observability">Observability</h2>
+<pre><code><span class="kw">import</span> { observability, logger, metrics, tracing, alerts, health } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+<span class="cm">// Structured logging</span>
+logger.info(<span class="str">'User signed in'</span>, { userId: <span class="str">'u123'</span> })
+logger.error(<span class="str">'Payment failed'</span>, { orderId: <span class="str">'o456'</span>, error: err.message })
+
+<span class="cm">// Metrics</span>
+metrics.increment(<span class="str">'api.requests'</span>, { endpoint: <span class="str">'/users'</span> })
+metrics.gauge(<span class="str">'db.connections'</span>, <span class="num">42</span>)
+
+<span class="cm">// Tracing</span>
+<span class="kw">const</span> span = tracing.startSpan(<span class="str">'process-order'</span>)
+span.end()
+
+<span class="cm">// Health checks</span>
+health.register(<span class="str">'database'</span>, <span class="kw">async</span> () =&gt; {
+  <span class="kw">const</span> h = <span class="kw">await</span> db.health()
+  <span class="kw">return</span> { status: h.status, latency: h.latencyMs }
+})
+<span class="kw">const</span> report = <span class="kw">await</span> health.check()
+
+<span class="cm">// Alerts</span>
+<span class="kw">await</span> alerts.create({ name: <span class="str">'high-error-rate'</span>, condition: <span class="str">'error_rate > 5%'</span>, channel: <span class="str">'slack'</span> })</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h2 id="secrets">Secrets Vault</h2>
+<pre><code><span class="kw">import</span> { createVault } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+<span class="kw">const</span> vault = createVault()
+
+<span class="kw">await</span> vault.set(<span class="str">'STRIPE_KEY'</span>, <span class="str">'sk_live_...'</span>)
+<span class="kw">const</span> key = <span class="kw">await</span> vault.get(<span class="str">'STRIPE_KEY'</span>)
+<span class="kw">const</span> secrets = <span class="kw">await</span> vault.list()
+<span class="kw">await</span> vault.delete(<span class="str">'OLD_KEY'</span>)</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h2 id="environments">Environments</h2>
+<pre><code><span class="kw">import</span> { createEnvironments } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+<span class="kw">const</span> envs = createEnvironments()
+
+<span class="kw">await</span> envs.create(<span class="str">'staging'</span>, { description: <span class="str">'Staging environment'</span> })
+<span class="kw">await</span> envs.setVariable(<span class="str">'staging'</span>, <span class="str">'API_URL'</span>, <span class="str">'https://staging.myapp.com'</span>)
+<span class="kw">await</span> envs.switch(<span class="str">'staging'</span>)
+<span class="kw">const</span> resolved = <span class="kw">await</span> envs.resolve()  <span class="cm">// Merged env vars with inheritance</span></code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h2 id="deploy">Deploy</h2>
+<pre><code><span class="kw">import</span> { createDeployManager } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+<span class="kw">const</span> deploy = createDeployManager()
+
+<span class="kw">const</span> deployment = <span class="kw">await</span> deploy.create({
+  environment: <span class="str">'production'</span>,
+  source: <span class="str">'./dist'</span>,
+  description: <span class="str">'v1.2.0 release'</span>,
+})
+
+<span class="kw">const</span> list = <span class="kw">await</span> deploy.list()
+<span class="kw">await</span> deploy.rollback(previousDeploymentId)
+<span class="kw">const</span> status = <span class="kw">await</span> deploy.status(deployment.id)
+<span class="kw">const</span> logs = <span class="kw">await</span> deploy.logs(deployment.id)</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h2 id="webhooks">Webhooks</h2>
+<pre><code><span class="kw">import</span> { webhooks } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+<span class="cm">// Register an incoming webhook</span>
+<span class="kw">const</span> endpoint = webhooks.register({
+  path: <span class="str">'/webhooks/stripe'</span>,
+  events: [<span class="str">'payment.completed'</span>],
+  handler: <span class="kw">async</span> (payload, headers) =&gt; {
+    console.log(<span class="str">'Payment received:'</span>, payload)
+  }
+})
+
+<span class="cm">// Verify a webhook signature</span>
+<span class="kw">const</span> { valid, payload } = webhooks.verify(rawBody, signature, secret)
+
+<span class="cm">// Process an incoming webhook</span>
+<span class="kw">const</span> result = <span class="kw">await</span> webhooks.process(<span class="str">'/webhooks/stripe'</span>, rawBody, headers)
+
+<span class="cm">// Sign outgoing webhooks</span>
+<span class="kw">const</span> sig = webhooks.sign(JSON.stringify(data), secret)</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="mcp-server">MCP Server (AI Agents)</h2>
+<p>The MCP server provides <strong>112 tools</strong> for AI coding agents like Claude Code and Cursor to manage your entire backend.</p>
+<pre><code><span class="cm">// Add to your Claude Code config (~/.claude.json)</span>
+{
+  <span class="str">"mcpServers"</span>: {
+    <span class="str">"vibekit"</span>: {
+      <span class="str">"command"</span>: <span class="str">"npx"</span>,
+      <span class="str">"args"</span>: [<span class="str">"@vibekit/mcp-server"</span>]
+    }
+  }
+}</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+<h4>Tool Categories</h4>
+<table>
+<tr><th>Category</th><th>Tools</th><th>Count</th></tr>
+<tr><td>Project</td><td>vibekit_init, project_status, check_health, create_project, ...</td><td>10</td></tr>
+<tr><td>Database (core)</td><td>create_table, db_query, db_tables, db_describe, db_health</td><td>5</td></tr>
+<tr><td>Database (advanced)</td><td>search, vectors, cron, queues, webhooks, branching, RLS</td><td>26</td></tr>
+<tr><td>Auth (core)</td><td>add_auth, auth_users, auth_user_detail, auth_delete_user, ...</td><td>7</td></tr>
+<tr><td>Auth (advanced)</td><td>OAuth, magic links, phone, MFA, orgs, permissions, waitlist</td><td>23</td></tr>
+<tr><td>Storage</td><td>add_storage, storage_list, storage_bucket_create, ...</td><td>6</td></tr>
+<tr><td>Email</td><td>add_email, email_send_batch, email_audience_create, ...</td><td>7</td></tr>
+<tr><td>Observability</td><td>check_logs, logs_search, metrics, health_check, alerts, ...</td><td>9</td></tr>
+<tr><td>Secrets &amp; Envs</td><td>secret_set/get/list/delete, env_list/create/switch, ...</td><td>9</td></tr>
+<tr><td>Deploy</td><td>deploy, deploy_create, deploy_list, deploy_rollback, ...</td><td>6</td></tr>
+<tr><td>Realtime</td><td>add_realtime</td><td>1</td></tr>
+<tr><td>Webhooks</td><td>webhook_register, webhook_list, webhook_verify</td><td>3</td></tr>
+</table>
+
+<h2 id="errors">Error Handling</h2>
+<pre><code><span class="kw">import</span> { VibeKitError, AuthError, DbError, StorageError, wrapError, handleError } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+<span class="kw">try</span> {
+  <span class="kw">await</span> db.query(<span class="str">'SELECT * FROM nonexistent'</span>)
+} <span class="kw">catch</span> (err) {
+  <span class="kw">if</span> (err <span class="kw">instanceof</span> DbError) {
+    console.error(err.code, err.message, err.context)
+  }
+  <span class="cm">// Or use handleError for generic handling</span>
+  handleError(err, { log: <span class="kw">true</span>, rethrow: <span class="kw">false</span> })
+}
+
+<span class="cm">// Wrap third-party errors</span>
+<span class="kw">const</span> wrapped = wrapError(thirdPartyError, <span class="str">'STORAGE_UPLOAD_FAILED'</span>)</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+<h2 id="logging">Logging</h2>
+<pre><code><span class="kw">import</span> { createLogger, requestLogger } <span class="kw">from</span> <span class="str">'@vibekit/sdk'</span>
+
+<span class="kw">const</span> log = createLogger(<span class="str">'myapp'</span>)
+log.info(<span class="str">'Server started'</span>, { port: <span class="num">3000</span> })
+log.warn(<span class="str">'Rate limit approaching'</span>, { userId: <span class="str">'u123'</span> })
+log.error(<span class="str">'Request failed'</span>, { error: err.message })
+
+<span class="cm">// Request logging middleware</span>
+app.use(requestLogger())</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+
+</main>
+
+<script>
+// Copy code button
+function copyCode(btn) {
+  const pre = btn.parentElement;
+  const code = pre.querySelector('code').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+
+// Sidebar active state
+const links = document.querySelectorAll('.sidebar-link');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const id = entry.target.id;
+      const link = document.querySelector(`.sidebar-link[href="#${id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-80px 0px -70% 0px', threshold: 0 });
+
+document.querySelectorAll('h2[id], h3[id]').forEach(el => observer.observe(el));
+
+// Sidebar search
+function filterSidebar(query) {
+  const q = query.toLowerCase();
+  document.querySelectorAll('.sidebar-link').forEach(link => {
+    const text = link.textContent.toLowerCase();
+    const section = link.closest('.sidebar-section');
+    link.style.display = !q || text.includes(q) ? '' : 'none';
+  });
+  document.querySelectorAll('.sidebar-section').forEach(section => {
+    const visibleLinks = section.querySelectorAll('.sidebar-link:not([style*="display: none"])');
+    section.style.display = visibleLinks.length > 0 ? '' : 'none';
+  });
+}
+
+// Close mobile sidebar on link click
+document.querySelectorAll('.sidebar-link').forEach(link => {
+  link.addEventListener('click', () => {
+    document.querySelector('.sidebar').classList.remove('open');
+  });
+});
+</script>
+</body>
+</html>

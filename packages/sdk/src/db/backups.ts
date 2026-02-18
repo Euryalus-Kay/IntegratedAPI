@@ -13,6 +13,9 @@ import path from 'node:path'
 import { execSync } from 'node:child_process'
 import crypto from 'node:crypto'
 import type { DatabaseAdapter } from './types.js'
+import { createLogger } from '../utils/logger.js'
+
+const log = createLogger('vibekit:backups')
 
 // ---------------------------------------------------------------------------
 // Types
@@ -263,7 +266,7 @@ export function createBackupManager(
 
         await recordBackup(info)
         await runRetention()
-        console.log(`[vibekit:backups] Created backup: ${id} (${stat.size} bytes)`)
+        log.info(`Created backup: ${id}`, { sizeBytes: stat.size })
         return info
       }
 
@@ -305,7 +308,7 @@ export function createBackupManager(
 
       await recordBackup(info)
       await runRetention()
-      console.log(`[vibekit:backups] Created backup: ${id} (${stat.size} bytes)`)
+      log.info(`Created backup: ${id}`, { sizeBytes: stat.size })
       return info
     },
 
@@ -368,7 +371,7 @@ export function createBackupManager(
         } catch (err) {
           throw new Error(`pg_restore failed: ${err instanceof Error ? err.message : String(err)}`)
         }
-        console.log(`[vibekit:backups] Restored from backup: ${backupId}`)
+        log.info(`Restored from backup: ${backupId}`)
         return
       }
 
@@ -390,7 +393,7 @@ export function createBackupManager(
       try { if (fs.existsSync(walPath)) fs.unlinkSync(walPath) } catch { /* ignore */ }
       try { if (fs.existsSync(shmPath)) fs.unlinkSync(shmPath) } catch { /* ignore */ }
 
-      console.log(`[vibekit:backups] Restored from backup: ${backupId}`)
+      log.info(`Restored from backup: ${backupId}`)
     },
 
     async delete(backupId: string): Promise<void> {
@@ -416,7 +419,7 @@ export function createBackupManager(
 
       // Delete record
       await adapter.execute(`DELETE FROM "${BACKUPS_META_TABLE}" WHERE id = $1`, [backupId])
-      console.log(`[vibekit:backups] Deleted backup: ${backupId}`)
+      log.info(`Deleted backup: ${backupId}`)
     },
 
     schedule(cron: string): ScheduleHandle {
@@ -435,7 +438,7 @@ export function createBackupManager(
             [info.id]
           )
         } catch (err) {
-          console.error(`[vibekit:backups] Scheduled backup failed: ${err instanceof Error ? err.message : String(err)}`)
+          log.error(`Scheduled backup failed: ${err instanceof Error ? err.message : String(err)}`)
         }
         if (running) {
           nextRunDate = new Date(Date.now() + intervalMs)
@@ -452,7 +455,7 @@ export function createBackupManager(
             clearInterval(timer)
             timer = null
           }
-          console.log('[vibekit:backups] Scheduled backups stopped')
+          log.info('Scheduled backups stopped')
         },
         isRunning(): boolean {
           return running
@@ -462,7 +465,7 @@ export function createBackupManager(
         },
       }
 
-      console.log(`[vibekit:backups] Scheduled backups every ${intervalMs / 1000}s`)
+      log.info(`Scheduled backups every ${intervalMs / 1000}s`)
       return handle
     },
 
@@ -473,7 +476,7 @@ export function createBackupManager(
     setRetentionPolicy(days: number): void {
       if (days < 1) throw new Error('Retention days must be at least 1')
       retentionDays = days
-      console.log(`[vibekit:backups] Retention policy updated: ${days} days`)
+      log.info(`Retention policy updated: ${days} days`)
     },
 
     async exportSql(): Promise<string> {
@@ -549,7 +552,7 @@ export function createBackupManager(
         } finally {
           try { fs.unlinkSync(tmpFile) } catch { /* ignore */ }
         }
-        console.log('[vibekit:backups] SQL import complete (Postgres)')
+        log.info('SQL import complete (Postgres)')
         return
       }
 
@@ -562,7 +565,7 @@ export function createBackupManager(
           await adapter.execute(trimmed)
         }
       }
-      console.log(`[vibekit:backups] SQL import complete (${statements.length} statements)`)
+      log.info(`SQL import complete`, { statements: statements.length })
     },
 
     async pointInTimeRestore(timestamp: Date): Promise<void> {
@@ -592,10 +595,10 @@ export function createBackupManager(
         )
       }
 
-      console.log(
-        `[vibekit:backups] Point-in-time restore to ${timestamp.toISOString()} ` +
-        `using backup ${bestBackup.id} from ${bestBackup.createdAt}`
-      )
+      log.info(`Point-in-time restore to ${timestamp.toISOString()}`, {
+        backupId: bestBackup.id,
+        backupCreatedAt: bestBackup.createdAt,
+      })
 
       // Restore from the selected backup
       await manager.restore(bestBackup.id)
@@ -604,11 +607,7 @@ export function createBackupManager(
       // the restore already includes all committed data up to the backup point.
       // True WAL-based PITR would require continuous WAL archiving, which is
       // typically done at the infrastructure level (e.g., Litestream).
-      console.log(
-        `[vibekit:backups] Restored to state as of ${bestBackup.createdAt}. ` +
-        `Note: Transactions between ${bestBackup.createdAt} and ${timestamp.toISOString()} ` +
-        `may be lost if no WAL archiving was configured.`
-      )
+      log.info(`Restored to state as of ${bestBackup.createdAt}. Transactions between ${bestBackup.createdAt} and ${timestamp.toISOString()} may be lost if no WAL archiving was configured.`)
     },
 
     async getWalStatus(): Promise<WalStatus> {

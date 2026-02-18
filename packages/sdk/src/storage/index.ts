@@ -1,6 +1,10 @@
 import { getConfig, isLocal } from '../config/index.js'
 import { createLocalStorageAdapter } from './local.js'
+import { createS3StorageAdapter, s3ConfigFromEnv, r2ConfigFromEnv } from './s3.js'
 import type { StorageAdapter, UploadOptions, FileInfo, ListFilesOptions, ListFilesResult } from './types.js'
+import { createLogger } from '../utils/logger.js'
+
+const log = createLogger('vibekit:storage')
 
 let _adapter: StorageAdapter | null = null
 
@@ -9,10 +13,52 @@ function getAdapter(): StorageAdapter {
     if (isLocal()) {
       _adapter = createLocalStorageAdapter()
     } else {
-      throw new Error('Production storage not yet implemented. Use vibekit dev for local development.')
+      _adapter = resolveProductionAdapter()
     }
   }
   return _adapter
+}
+
+function resolveProductionAdapter(): StorageAdapter {
+  const backend = process.env.STORAGE_BACKEND?.toLowerCase()
+
+  // Explicit S3 backend or S3 env vars present
+  if (backend === 's3' || process.env.S3_BUCKET) {
+    const s3Config = s3ConfigFromEnv()
+    if (s3Config) {
+      log.info('Using S3 storage adapter', { bucket: s3Config.bucket, region: s3Config.region })
+      return createS3StorageAdapter(s3Config)
+    }
+  }
+
+  // Explicit R2 backend or R2 env vars present
+  if (backend === 'r2' || process.env.R2_BUCKET) {
+    const r2Config = r2ConfigFromEnv()
+    if (r2Config) {
+      log.info('Using R2 storage adapter', { bucket: r2Config.bucket, endpoint: r2Config.endpoint })
+      return createS3StorageAdapter(r2Config)
+    }
+  }
+
+  // Auto-detect: check for S3 env vars first, then R2
+  const s3Config = s3ConfigFromEnv()
+  if (s3Config) {
+    log.info('Auto-detected S3 storage adapter', { bucket: s3Config.bucket })
+    return createS3StorageAdapter(s3Config)
+  }
+
+  const r2Config = r2ConfigFromEnv()
+  if (r2Config) {
+    log.info('Auto-detected R2 storage adapter', { bucket: r2Config.bucket })
+    return createS3StorageAdapter(r2Config)
+  }
+
+  // Fall back to local storage as default
+  log.warn(
+    'No production storage backend configured. Falling back to local file storage. ' +
+    'Set S3_BUCKET, R2_BUCKET, or STORAGE_BACKEND to configure production storage.'
+  )
+  return createLocalStorageAdapter()
 }
 
 export const storage = {
@@ -50,6 +96,10 @@ export const storage = {
 }
 
 export type { StorageAdapter, UploadOptions, FileInfo, ListFilesOptions, ListFilesResult }
+
+// S3-compatible adapter
+export { createS3StorageAdapter, s3ConfigFromEnv, r2ConfigFromEnv } from './s3.js'
+export type { S3AdapterConfig } from './s3.js'
 
 // Advanced storage modules
 export { createBucketManager } from './buckets.js'
