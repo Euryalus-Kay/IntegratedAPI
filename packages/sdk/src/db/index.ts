@@ -3,3 +3,14 @@ export { defineTable, getTableDefinitions, getTableDefinition, clearTableDefinit
 export { Migrator } from './migrator.js'
 export { QueryBuilder } from './query-builder.js'
 export * from './types.js'
+
+// Advanced features
+export { createRLSManager, createRLSManagerWithTracking } from './rls.js'
+export { createTriggerManager } from './triggers.js'
+export { createDbFunctionManager } from './functions.js'
+export { createSearchManager } from './search.js'
+export { createVectorManager } from './vectors.js'
+export { createCronManager } from './cron.js'
+export { createQueueManager } from './queues.js'
+export { createWebhookManager } from './webhooks.js'
+export { createBranchManager } from './branching.js'

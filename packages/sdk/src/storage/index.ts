@@ -50,3 +50,11 @@ export const storage = {
 }
 
 export type { StorageAdapter, UploadOptions, FileInfo, ListFilesOptions, ListFilesResult }
+
+// Advanced storage modules
+export { createBucketManager } from './buckets.js'
+export type {
+  Bucket, StorageObject, UploadToBucketOptions,
+  SignedUrlOptions, ImageTransformOptions,
+  ListObjectsOptions, ListObjectsResult,
+} from './buckets.js'

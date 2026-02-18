@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXISTS vibekit_sessions (
   expires_at TEXT NOT NULL,
   ip_address TEXT,
   user_agent TEXT,
+  metadata TEXT,
   created_at TEXT DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON vibekit_sessions(user_id);
@@ -330,7 +331,8 @@ export const auth = {
     await ensureAuthTables()
     const token = extractToken(request)
     if (!token) return null
-    return verifySession(db._getAdapter(), token)
+    const result = await verifySession(db._getAdapter(), token)
+    return result?.user ?? null
   },
 
   /**

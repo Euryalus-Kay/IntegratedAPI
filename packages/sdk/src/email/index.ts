@@ -194,3 +194,20 @@ export const email = {
 
 export { getTemplate, hasTemplate, listTemplates, registerTemplate, removeTemplate, renderTemplate, previewTemplate, validateTemplateData }
 export type { SendEmailOptions, EmailTemplate, EmailLog, EmailSendResult }
+
+// Advanced email modules
+export {
+  emailProviders,
+  createConsoleProvider,
+  createSmtpProvider,
+  createResendProvider,
+  createSendGridProvider,
+  createMailgunProvider,
+} from './providers.js'
+export type { EmailProvider, ProviderSendOptions, ProviderSendResult, SmtpConfig } from './providers.js'
+
+export { sendBatch, sendToMany } from './batch.js'
+export type { BatchSendOptions, BatchSendResult } from './batch.js'
+
+export { createAudienceManager } from './audiences.js'
+export type { Audience, Contact, ContactListOptions, ContactListResult } from './audiences.js'

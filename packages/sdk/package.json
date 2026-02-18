@@ -1,7 +1,7 @@
 {
   "name": "vibekit",
-  "version": "0.1.0",
-  "description": "The AI-native backend SDK. Database, auth, storage, email, realtime in one package.",
+  "version": "0.2.0",
+  "description": "The AI-native backend SDK. Database, auth, storage, email, realtime, observability, secrets, environments, deploy, webhooks — replaces Supabase + Vercel + Railway.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -65,6 +65,31 @@
     "./notifications": {
       "import": "./dist/notifications/index.js",
       "types": "./dist/notifications/index.d.ts"
+    },
+    "./observability": {
+      "import": "./dist/observability/index.js",
+      "require": "./dist/observability/index.cjs",
+      "types": "./dist/observability/index.d.ts"
+    },
+    "./secrets": {
+      "import": "./dist/secrets/index.js",
+      "require": "./dist/secrets/index.cjs",
+      "types": "./dist/secrets/index.d.ts"
+    },
+    "./environments": {
+      "import": "./dist/environments/index.js",
+      "require": "./dist/environments/index.cjs",
+      "types": "./dist/environments/index.d.ts"
+    },
+    "./deploy": {
+      "import": "./dist/deploy/index.js",
+      "require": "./dist/deploy/index.cjs",
+      "types": "./dist/deploy/index.d.ts"
+    },
+    "./webhooks": {
+      "import": "./dist/webhooks/index.js",
+      "require": "./dist/webhooks/index.cjs",
+      "types": "./dist/webhooks/index.d.ts"
     }
   },
   "files": ["dist", "README.md"],

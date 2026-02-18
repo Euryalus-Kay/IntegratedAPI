@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS vibekit_sessions (
   expires_at TEXT NOT NULL,
   ip_address TEXT,
   user_agent TEXT,
+  metadata TEXT,
   created_at TEXT DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON vibekit_sessions(user_id);
@@ -367,11 +368,11 @@ describe('Session management', () => {
     await insertUser(db, user)
 
     const { token } = await createSessionFresh(db, user)
-    const verifiedUser = await verifySessionFresh(db, token)
+    const result = await verifySessionFresh(db, token)
 
-    expect(verifiedUser).not.toBeNull()
-    expect(verifiedUser!.id).toBe(user.id)
-    expect(verifiedUser!.email).toBe(user.email)
+    expect(result).not.toBeNull()
+    expect(result!.user.id).toBe(user.id)
+    expect(result!.user.email).toBe(user.email)
   })
 
   it('returns null for an invalid session token', async () => {
@@ -381,7 +382,7 @@ describe('Session management', () => {
   })
 
   it('revokes sessions for a user', async () => {
-    const { createSession: createSessionFresh, revokeSession: revokeSessionFresh } = await import('../src/auth/session.js')
+    const { createSession: createSessionFresh, revokeAllSessions: revokeAllSessionsFresh } = await import('../src/auth/session.js')
     const user = createTestUser({ email: 'revoke@example.com' })
     await insertUser(db, user)
 
@@ -389,7 +390,7 @@ describe('Session management', () => {
     const sessionsBefore = await db.query('SELECT * FROM vibekit_sessions WHERE user_id = $1', [user.id])
     expect(sessionsBefore.rows).toHaveLength(1)
 
-    await revokeSessionFresh(db, user.id)
+    await revokeAllSessionsFresh(db, user.id)
     const sessionsAfter = await db.query('SELECT * FROM vibekit_sessions WHERE user_id = $1', [user.id])
     expect(sessionsAfter.rows).toHaveLength(0)
   })
