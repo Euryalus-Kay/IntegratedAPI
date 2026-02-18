@@ -65,6 +65,21 @@ export interface DomainConfig {
   createdAt: string
 }
 
+export interface PublishOptions {
+  /** Port for the hosting server (default: 3748) */
+  port?: number
+  /** Whether to set as active deployment (default: true) */
+  setActive?: boolean
+}
+
+export interface PublishResult {
+  url: string
+  fileCount: number
+  totalSize: number
+  deployDir: string
+  deploymentId: string
+}
+
 interface DeployStore {
   deployments: Record<string, Deployment>
   logs: Record<string, DeploymentLog[]>
@@ -74,6 +89,31 @@ interface DeployStore {
 
 function getStorePath(dataDir: string): string {
   return path.join(dataDir, '.vibekit-deployments.json')
+}
+
+function getDeployDir(dataDir: string, deploymentId: string): string {
+  return path.join(dataDir, 'deployments', deploymentId)
+}
+
+/**
+ * Recursively count files and total size in a directory
+ */
+function countDirFiles(dir: string): { count: number; totalSize: number } {
+  let count = 0
+  let totalSize = 0
+  const entries = fs.readdirSync(dir, { withFileTypes: true })
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name)
+    if (entry.isDirectory()) {
+      const sub = countDirFiles(fullPath)
+      count += sub.count
+      totalSize += sub.totalSize
+    } else {
+      count++
+      totalSize += fs.statSync(fullPath).size
+    }
+  }
+  return { count, totalSize }
 }
 
 function loadStore(storePath: string): DeployStore {
@@ -215,6 +255,69 @@ export function createDeployManager(dataDir?: string) {
         metadata: { ...source.metadata, promotedFrom: source.id, promotedFromEnv: source.environment },
       })
       return deploy.updateStatus(promoted.id, 'ready', { url: source.url || undefined })
+    },
+
+    // ── Publish (copy files & serve) ────────────────────────────
+
+    /**
+     * Publish deployment files to the hosting directory.
+     * Copies all files from sourceDir into .vibekit/deployments/:id/
+     * and marks the deployment as ready with a live URL.
+     */
+    publish(id: string, sourceDir: string, options?: PublishOptions): PublishResult {
+      const store = loadStore(storePath)
+      const deployment = store.deployments[id]
+      if (!deployment) throw new Error(`Deployment "${id}" not found`)
+
+      // Validate source directory
+      if (!fs.existsSync(sourceDir)) throw new Error(`Source directory "${sourceDir}" does not exist`)
+
+      const port = options?.port || 3748
+      const setActive = options?.setActive !== false
+
+      // Copy files to deployment directory
+      const deployDir = getDeployDir(dir, id)
+      if (fs.existsSync(deployDir)) fs.rmSync(deployDir, { recursive: true })
+      fs.mkdirSync(deployDir, { recursive: true })
+      fs.cpSync(sourceDir, deployDir, { recursive: true })
+
+      // Count files and size
+      const { count: fileCount, totalSize } = countDirFiles(deployDir)
+
+      // Update deployment record
+      const url = `http://localhost:${port}/sites/${id}/`
+      deployment.url = url
+      deployment.status = 'ready'
+      deployment.readyAt = new Date().toISOString()
+      deployment.updatedAt = deployment.readyAt
+      deployment.metadata = {
+        ...deployment.metadata,
+        fileCount,
+        totalSize,
+        publishedAt: deployment.readyAt,
+      }
+
+      if (setActive) {
+        store.activeDeployment[deployment.environment] = id
+      }
+
+      saveStore(storePath, store)
+
+      return { url, fileCount, totalSize, deployDir, deploymentId: id }
+    },
+
+    /**
+     * Get the directory where a deployment's files are stored.
+     */
+    getDeployDir(id: string): string {
+      return getDeployDir(dir, id)
+    },
+
+    /**
+     * Get the data directory (for hosting server).
+     */
+    getDataDir(): string {
+      return dir
     },
 
     // ── Domains ─────────────────────────────────────────────────

@@ -34,6 +34,7 @@ export default defineConfig({
 
     // Deploy
     'deploy/index': 'src/deploy/index.ts',
+    'deploy/host': 'src/deploy/host.ts',
 
     // Webhooks
     'webhooks/index': 'src/webhooks/index.ts',
@@ -58,5 +59,5 @@ export default defineConfig({
   clean: true,
   splitting: false,
   sourcemap: true,
-  external: ['@neondatabase/serverless', 'react', 'react-dom', 'hono'],
+  external: ['@neondatabase/serverless', 'react', 'react-dom', 'hono', '@hono/node-server'],
 })

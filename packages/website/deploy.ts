@@ -2,11 +2,16 @@
 /**
  * VibeKit Website Deploy Script
  *
- * Deploys the website using VibeKit's own deploy system as a self-test.
- * This demonstrates how createDeployManager works for static site deployment.
+ * Deploys the website using VibeKit's own deploy + hosting system.
+ * Creates a real deployment, publishes files, and starts a live HTTP server.
+ *
+ * Usage:
+ *   npx tsx deploy.ts              # Deploy and serve on http://localhost:3748
+ *   npx tsx deploy.ts --port 8080  # Deploy on custom port
  */
 
 import { createDeployManager } from '../sdk/src/deploy/index.js'
+import { startHostingServer, createTunnel } from '../sdk/src/deploy/host.js'
 import { createLogger } from '../sdk/src/utils/logger.js'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -17,9 +22,17 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const log = createLogger('vibekit:website-deploy')
 
 async function main() {
-  const deploy = createDeployManager(path.join(__dirname, '.vibekit'))
+  const dataDir = path.join(__dirname, '.vibekit')
+  const deploy = createDeployManager(dataDir)
 
-  log.info('Starting VibeKit website deployment...')
+  // Parse CLI args
+  const args = process.argv.slice(2)
+  const portIdx = args.indexOf('--port')
+  const port = portIdx >= 0 ? parseInt(args[portIdx + 1], 10) : 3748
+
+  console.log('')
+  console.log('  \x1b[36m▲ VibeKit Deploy\x1b[0m')
+  console.log('')
 
   // Get git info
   let commitHash = '', commitMessage = '', branch = ''
@@ -29,7 +42,19 @@ async function main() {
     branch = execSync('git branch --show-current', { encoding: 'utf8', cwd: path.join(__dirname, '..', '..') }).trim()
   } catch { /* git not available */ }
 
-  // Create deployment
+  // ── Build ──────────────────────────────────────────────────
+  console.log('  \x1b[90m┌\x1b[0m Building...')
+  const buildStart = Date.now()
+
+  const distDir = path.join(__dirname, 'dist')
+  if (fs.existsSync(distDir)) fs.rmSync(distDir, { recursive: true })
+  const srcDir = path.join(__dirname, 'src')
+  fs.cpSync(srcDir, distDir, { recursive: true })
+
+  const buildDuration = Date.now() - buildStart
+  console.log(`  \x1b[90m├\x1b[0m Built in ${buildDuration}ms`)
+
+  // ── Create Deployment ──────────────────────────────────────
   const deployment = deploy.create({
     environment: 'production',
     commitHash,
@@ -42,90 +67,81 @@ async function main() {
     }
   })
 
-  log.info(`Created deployment ${deployment.id}`)
-
-  // Build phase
   deploy.addLog(deployment.id, { level: 'info', message: 'Building website...', phase: 'build' })
-  deploy.updateStatus(deployment.id, 'building')
+  deploy.updateStatus(deployment.id, 'building', { buildDuration })
+  deploy.addLog(deployment.id, { level: 'info', message: `Built in ${buildDuration}ms`, phase: 'build' })
 
-  try {
-    // Run build
-    const distDir = path.join(__dirname, 'dist')
-    if (fs.existsSync(distDir)) fs.rmSync(distDir, { recursive: true })
-
-    const srcDir = path.join(__dirname, 'src')
-    fs.cpSync(srcDir, distDir, { recursive: true })
-
-    // Count files
-    const files = fs.readdirSync(distDir)
-    deploy.addLog(deployment.id, { level: 'info', message: `Built ${files.length} files`, phase: 'build' })
-
-    // Calculate total size
-    let totalSize = 0
-    for (const file of files) {
-      const stat = fs.statSync(path.join(distDir, file))
-      totalSize += stat.size
-    }
-    deploy.addLog(deployment.id, { level: 'info', message: `Total size: ${(totalSize / 1024).toFixed(1)} KB`, phase: 'build' })
-
-  } catch (err) {
-    deploy.updateStatus(deployment.id, 'failed')
-    deploy.addLog(deployment.id, { level: 'error', message: `Build failed: ${err}`, phase: 'build' })
-    log.error('Build failed', { error: String(err) })
-    process.exit(1)
-  }
-
-  // Deploy phase
-  deploy.addLog(deployment.id, { level: 'info', message: 'Deploying...', phase: 'deploy' })
+  // ── Publish (copy files to deployment dir) ─────────────────
+  console.log('  \x1b[90m├\x1b[0m Publishing...')
   deploy.updateStatus(deployment.id, 'deploying')
+  deploy.addLog(deployment.id, { level: 'info', message: 'Publishing files...', phase: 'deploy' })
 
-  try {
-    // In a real deployment, this would upload to S3/R2/CDN
-    // For now, we verify the build output exists and is valid
-    const distDir = path.join(__dirname, 'dist')
-    const indexExists = fs.existsSync(path.join(distDir, 'index.html'))
-    const docsExists = fs.existsSync(path.join(distDir, 'docs.html'))
+  const publishStart = Date.now()
+  const result = deploy.publish(deployment.id, distDir, { port })
+  const deployDuration = Date.now() - publishStart
 
-    if (!indexExists) throw new Error('index.html not found in build output')
-    if (!docsExists) throw new Error('docs.html not found in build output')
+  deploy.addLog(deployment.id, {
+    level: 'info',
+    message: `Published ${result.fileCount} files (${(result.totalSize / 1024).toFixed(1)} KB)`,
+    phase: 'deploy',
+  })
+  deploy.updateStatus(deployment.id, 'ready', { deployDuration, url: result.url })
+  deploy.addLog(deployment.id, { level: 'info', message: 'Deployment ready!', phase: 'promote' })
 
-    deploy.addLog(deployment.id, { level: 'info', message: 'Verified: index.html ✓', phase: 'deploy' })
-    deploy.addLog(deployment.id, { level: 'info', message: 'Verified: docs.html ✓', phase: 'deploy' })
+  console.log(`  \x1b[90m├\x1b[0m ${result.fileCount} files (${(result.totalSize / 1024).toFixed(1)} KB)`)
 
-    // Mark as ready
-    deploy.updateStatus(deployment.id, 'ready')
-    deploy.addLog(deployment.id, { level: 'info', message: 'Deployment successful!', phase: 'promote' })
+  // ── Start Hosting Server ───────────────────────────────────
+  console.log('  \x1b[90m├\x1b[0m Starting server...')
+  const server = await startHostingServer({ port, dataDir })
 
-  } catch (err) {
-    deploy.updateStatus(deployment.id, 'failed')
-    deploy.addLog(deployment.id, { level: 'error', message: `Deploy failed: ${err}`, phase: 'deploy' })
-    log.error('Deploy failed', { error: String(err) })
-    process.exit(1)
+  console.log('  \x1b[90m└\x1b[0m')
+  console.log('')
+  console.log(`  \x1b[32m✓ Ready!\x1b[0m Deployed to \x1b[4m${server.url}\x1b[0m`)
+  console.log('')
+  console.log(`  \x1b[90m  Deployment:  ${deployment.id.slice(0, 8)}\x1b[0m`)
+  console.log(`  \x1b[90m  Branch:      ${branch || 'unknown'}\x1b[0m`)
+  console.log(`  \x1b[90m  Commit:      ${commitHash || 'unknown'}\x1b[0m`)
+  console.log(`  \x1b[90m  Environment: production\x1b[0m`)
+  console.log('')
+  console.log(`  \x1b[90m  Local URL:   ${server.url}\x1b[0m`)
+  console.log(`  \x1b[90m  Site URL:    ${server.url}/sites/${deployment.id}/\x1b[0m`)
+  console.log(`  \x1b[90m  API:         ${server.url}/api/deployments\x1b[0m`)
+
+  // Try to create a public tunnel
+  console.log('')
+  console.log('  \x1b[90mCreating public tunnel...\x1b[0m')
+  const tunnel = await createTunnel(port)
+  if (tunnel) {
+    console.log(`  \x1b[32m✓ Public URL:\x1b[0m \x1b[4m${tunnel.url}\x1b[0m`)
+    console.log(`  \x1b[90m  Provider: ${tunnel.provider}\x1b[0m`)
+
+    // Update deployment with public URL
+    deploy.updateStatus(deployment.id, 'ready', { url: tunnel.url })
+
+    process.on('exit', () => tunnel.stop())
+  } else {
+    console.log('  \x1b[33m⚠ No tunnel available.\x1b[0m Install cloudflared for public URLs:')
+    console.log('    brew install cloudflared')
   }
 
-  // Print results
-  const status = deploy.get(deployment.id)
-  const logs = deploy.getLogs(deployment.id)
-  const list = deploy.list({ environment: 'production', limit: 5 })
+  console.log('')
+  console.log('  \x1b[90mPress Ctrl+C to stop the server\x1b[0m')
+  console.log('')
 
-  console.log('\n╔══════════════════════════════════════════════════╗')
-  console.log('║  VibeKit Website Deployment Complete             ║')
-  console.log('╠══════════════════════════════════════════════════╣')
-  console.log(`║  ID:          ${deployment.id.slice(0, 36)}  ║`)
-  console.log(`║  Status:      ${status?.status.padEnd(36)}║`)
-  console.log(`║  Environment: ${'production'.padEnd(36)}║`)
-  console.log(`║  Branch:      ${(branch || 'unknown').padEnd(36)}║`)
-  console.log(`║  Commit:      ${(commitHash || 'unknown').padEnd(36)}║`)
-  console.log('╠══════════════════════════════════════════════════╣')
-  console.log('║  Build Logs:                                     ║')
-  for (const log of logs) {
-    const icon = log.level === 'error' ? '✗' : log.level === 'warn' ? '!' : '✓'
-    console.log(`║  ${icon} ${log.message.slice(0, 46).padEnd(47)}║`)
-  }
-  console.log('╠══════════════════════════════════════════════════╣')
-  console.log(`║  Total deployments: ${String(list.total).padEnd(30)}║`)
-  console.log('╚══════════════════════════════════════════════════╝')
-  console.log(`\nServe locally: npx serve dist`)
+  // Keep process alive
+  process.on('SIGINT', () => {
+    console.log('\n  \x1b[33mShutting down...\x1b[0m')
+    server.stop()
+    process.exit(0)
+  })
+
+  process.on('SIGTERM', () => {
+    server.stop()
+    process.exit(0)
+  })
 }
 
-main().catch(console.error)
+main().catch((err) => {
+  console.error('\n  \x1b[31m✗ Deploy failed:\x1b[0m', err.message || err)
+  process.exit(1)
+})

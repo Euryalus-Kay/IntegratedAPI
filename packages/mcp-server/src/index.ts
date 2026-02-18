@@ -56,7 +56,7 @@
  *    env_list, env_create, env_switch, env_set_var, env_resolve
  *
  *  Deploy:
- *    deploy, deploy_create, deploy_list, deploy_rollback, deploy_status, deploy_logs
+ *    deploy, deploy_create, deploy_list, deploy_rollback, deploy_status, deploy_logs, deploy_publish, deploy_serve
  *
  *  Realtime:
  *    add_realtime
@@ -1509,6 +1509,33 @@ const TOOLS = [
         deploymentId: { type: 'string', description: 'Deployment ID to get logs for' },
       },
       required: ['deploymentId'],
+    },
+  },
+
+  {
+    name: 'deploy_publish',
+    description:
+      'Deploy a static site from a local directory. Copies files, starts a hosting server, and returns a live URL. ' +
+      'This is the primary way to deploy websites through VibeKit — equivalent to `vercel` or `railway up`.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        sourceDir: { type: 'string', description: 'Path to the directory containing built static files (e.g. "./dist", "./build", "./out")' },
+        environment: { type: 'string', description: 'Target environment (default: "production")' },
+        port: { type: 'number', description: 'Port for the hosting server (default: 3748)' },
+      },
+      required: ['sourceDir'],
+    },
+  },
+  {
+    name: 'deploy_serve',
+    description:
+      'Start the VibeKit hosting server to serve previously deployed sites. Use this after deploy_publish if the server was stopped.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        port: { type: 'number', description: 'Port for the hosting server (default: 3748)' },
+      },
     },
   },
 
@@ -4604,6 +4631,115 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           )
         } catch (e: any) {
           return fail(`Error getting deployment logs: ${e.message}`)
+        }
+      }
+
+      case 'deploy_publish': {
+        try {
+          const sourceDir = arg<string>(args, 'sourceDir')
+          if (!sourceDir) return fail('sourceDir is required — path to the built static files (e.g. "./dist")')
+
+          const fs = await import('node:fs')
+          const path = await import('node:path')
+
+          // Resolve to absolute path
+          const resolvedDir = path.default.resolve(sourceDir)
+          if (!fs.default.existsSync(resolvedDir)) {
+            return fail(`Source directory not found: ${resolvedDir}\n\nMake sure you've built your project first.`)
+          }
+
+          const environment = arg<string>(args, 'environment') || 'production'
+          const port = arg<number>(args, 'port') || 3748
+
+          // Get git info
+          let commitHash = '', commitMessage = '', branch = ''
+          try {
+            const { execSync } = await import('node:child_process')
+            commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim()
+            commitMessage = execSync('git log -1 --pretty=%s', { encoding: 'utf8' }).trim()
+            branch = execSync('git branch --show-current', { encoding: 'utf8' }).trim()
+          } catch { /* git not available */ }
+
+          // Create deploy manager and deployment
+          const { createDeployManager } = await import('vibekit')
+          const deploy = createDeployManager()
+
+          const deployment = deploy.create({
+            environment,
+            commitHash: commitHash || undefined,
+            commitMessage: commitMessage || undefined,
+            branch: branch || undefined,
+            metadata: { type: 'static-site', sourceDir: resolvedDir },
+          })
+
+          // Build phase
+          deploy.updateStatus(deployment.id, 'building')
+          deploy.addLog(deployment.id, { level: 'info', message: 'Publishing files...', phase: 'build' })
+
+          // Publish files
+          deploy.updateStatus(deployment.id, 'deploying')
+          const result = deploy.publish(deployment.id, resolvedDir, { port })
+
+          deploy.addLog(deployment.id, {
+            level: 'info',
+            message: `Published ${result.fileCount} files (${(result.totalSize / 1024).toFixed(1)} KB)`,
+            phase: 'deploy',
+          })
+
+          // Start hosting server
+          const { startHostingServer, createTunnel } = await import('vibekit')
+          const server = await startHostingServer({ port })
+
+          deploy.updateStatus(deployment.id, 'ready', { url: result.url })
+          deploy.addLog(deployment.id, { level: 'info', message: 'Deployment ready!', phase: 'promote' })
+
+          // Try to create a public tunnel
+          let publicUrl = ''
+          try {
+            const tunnel = await createTunnel(port)
+            if (tunnel) {
+              publicUrl = tunnel.url
+              deploy.updateStatus(deployment.id, 'ready', { url: tunnel.url })
+              deploy.addLog(deployment.id, { level: 'info', message: `Public URL: ${tunnel.url} (${tunnel.provider})`, phase: 'promote' })
+            }
+          } catch { /* tunnel not available */ }
+
+          return ok(
+            `✓ Deployed successfully!\n\n` +
+            `  Local URL:    ${server.url}\n` +
+            (publicUrl ? `  Public URL:   ${publicUrl}\n` : '') +
+            `  Site URL:     ${server.url}/sites/${deployment.id}/\n` +
+            `  API:          ${server.url}/api/deployments\n\n` +
+            `  Deployment:   ${deployment.id.slice(0, 8)}\n` +
+            `  Environment:  ${environment}\n` +
+            `  Files:        ${result.fileCount}\n` +
+            `  Size:         ${(result.totalSize / 1024).toFixed(1)} KB\n` +
+            (branch ? `  Branch:       ${branch}\n` : '') +
+            (commitHash ? `  Commit:       ${commitHash}\n` : '') +
+            `\nThe server is running. Visit the ${publicUrl ? 'Public' : 'Local'} URL in your browser to see the site.` +
+            (!publicUrl ? '\n\nInstall cloudflared for public URLs: brew install cloudflared' : '')
+          )
+        } catch (e: any) {
+          return fail(`Error deploying: ${e.message}`)
+        }
+      }
+
+      case 'deploy_serve': {
+        try {
+          const port = arg<number>(args, 'port') || 3748
+
+          const { startHostingServer } = await import('vibekit')
+          const server = await startHostingServer({ port })
+
+          return ok(
+            `✓ Hosting server started!\n\n` +
+            `  URL: ${server.url}\n` +
+            `  Port: ${server.port}\n\n` +
+            `The server is now serving all previously deployed sites.\n` +
+            `Visit ${server.url} in your browser.`
+          )
+        } catch (e: any) {
+          return fail(`Error starting hosting server: ${e.message}`)
         }
       }
 

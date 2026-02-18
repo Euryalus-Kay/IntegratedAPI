@@ -11,6 +11,7 @@ export { observability, logger, metrics, tracing, alerts, health, createLogDrain
 export { createVault, createDefaultVault } from './secrets/index.js'
 export { createEnvironments } from './environments/index.js'
 export { createDeployManager } from './deploy/index.js'
+export { createHostingApp, startHostingServer, createTunnel } from './deploy/host.js'
 export { webhooks } from './webhooks/index.js'
 
 // Advanced auth (re-exported from auth/index)
@@ -220,7 +221,9 @@ export type { Environment, EnvironmentListResult, EnvironmentDiff } from './envi
 export type {
   Deployment, DeploymentStatus, DeploymentLog, CreateDeploymentOptions,
   DeploymentListOptions, DeploymentListResult, DomainConfig,
+  PublishOptions, PublishResult,
 } from './deploy/index.js'
+export type { HostingServerOptions, TunnelResult } from './deploy/host.js'
 
 // Re-export types: Webhooks
 export type { WebhookEndpoint, WebhookVerifyResult } from './webhooks/index.js'
